@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 센터</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../CSS/datacenter.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sun-typeface/jetbrains-mono@2.242/style.css">
+    <link rel="icon" href="../assets/favicon.png">
+</head>
+
+<body>
+    <div class="dot-overlay"></div>
+
+    <nav>
+        <div class="nav-left">
+            <span class="logo-text">CLASS WEB</span>
+        </div>
+
+        <div class="nav-center">
+            <a href="dashboard.html">대시보드</a>
+            <a href="board.html">수행평가 및 안내사항</a>
+            <a href="datacenter.html" class="active">데이터 센터</a>
+        </div>
+
+        <div class="mobile-menu-container" style="display: none;">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="nav-right">
+            <button class="nothing-btn" id="accountBtn">계정</button>
+            <div id="accountDropdown" class="dropdown-content">
+                <a href="admin.html">관리자 패널</a>
+                <a href="#" onclick="logout()" class="logout-btn">로그아웃</a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mobileNavOverlay" class="mobile-nav-overlay">
+        <div class="mobile-nav-content">
+            <div class="widget-title">메뉴</div>
+            <a href="dashboard.html">대시보드</a>
+            <a href="board.html">수행평가 및 안내사항</a>
+            <a href="datacenter.html">데이터 센터</a>
+        </div>
+    </div>
+
+    <main class="main-container">
+        <header class="page-header">
+            <h1>데이터 센터</h1>
+            <p>수업 자료 및 공유 파일을 다운로드하세요.</p>
+        </header>
+        <section class="section-card">
+            <div class="board-utils">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="자료 제목을 검색하세요 (공백으로 구분)" autocomplete="off">
+                </div>
+            </div>
+
+
+            <div class="sort-controls">
+                <button onclick="sortData('uploader')">업로더 <span id="sort-uploader-icon">↕</span></button>
+                <button onclick="sortData('title')">제목 <span id="sort-title-icon">↕</span></button>
+                <button onclick="sortData('date')" class="active-sort">작성일 <span id="sort-date-icon">↓</span></button>
+            </div>
+
+            <div class="data-table" style="padding-bottom: 20px;">
+                <div class="table-header">
+                    <div class="col-uploader">업로더</div>
+                    <div class="col-content">내용 (제목 / 파일)</div>
+                    <div class="col-date">작성일</div>
+                </div>
+                <div id="file-list-container">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <button class="mode-toggle" onclick="toggleTheme()">
+            <img src="../assets/vmode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">다크/라이트 모드</span>
+        </button>
+        <button class="mode-toggle" id="seasonalModeBtn" onclick="toggleSeasonalMode()">
+            <img src="../assets/smode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">스노우 모드</span>
+        </button>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="../SCRIPT/datacenter.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,170 @@
+/* 대시보드 전용 그리드 설정 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /* 2열 구조 */
+    gap: 15px;
+}
+
+/* 내 정보 섹션 (전체 너비 사용, 낮은 높이) */
+.profile-card {
+    display: flex;
+    align-items: center;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+}
+
+.profile-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #333;
+    /* 이미지 없을 시 대비 */
+    margin-right: 20px;
+    object-fit: cover;
+}
+
+.profile-info h2 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.profile-info p {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* 위젯 공통 스타일 */
+.widget-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.widget-title::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+/* 데이터 텍스트 스타일 */
+.data-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.dot-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background-color: var(--badge-bg);
+    /* 변수 적용 */
+    color: var(--badge-text);
+    /* 변수 적용 */
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: all 0.4s ease;
+    /* 테마 전환 시 부드럽게 변경 */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 64px;
+}
+
+.duty-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    /* 공간 부족 시 자동으로 아래로 떨어짐 */
+}
+
+.duty-item {
+    min-width: 120px;
+    /* 최소 너비 확보 */
+    flex: 1;
+    /* 가용 공간을 골고루 나눔 */
+}
+
+/* 세로 배치가 될 때 구분선 처리 */
+.duty-item+.duty-item {
+    border-left: 1px solid var(--border-color);
+    padding-left: 20px;
+}
+
+.meal-list {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    /* 줄간격 확보 */
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* 급식 메뉴 하나하나가 다음 줄로 넘어가도록 설정 */
+.meal-item {
+    display: block;
+    /* 한 줄에 하나씩 */
+    margin-bottom: 2px;
+}
+
+@media (max-width: 480px) {
+
+    /* iPhone SE 등 아주 작은 화면에서는 구분선을 없애고 위아래 간격 추가 */
+    .duty-item+.duty-item {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid var(--border-color);
+        padding-top: 15px;
+    }
+
+    .main-container {
+        padding: 15px;
+        /* 전체 여백 축소 */
+    }
+
+    /* 프로필 카드 높이 축소 */
+    .profile-card {
+        padding: 15px 20px;
+        margin-bottom: 15px;
+    }
+
+    .profile-img {
+        width: 45px;
+        /* 크기 축소 */
+        height: 45px;
+    }
+
+    /* 지각생/청소당번 위젯 높이 최적화 */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        /* 모바일에선 무조건 한 줄로 */
+    }
+
+    .section-card {
+        grid-column: span 1 !important;
+        /* 급식표도 한 줄로 통일 */
+    }
+
+    /* 수행평가 위젯이 너무 아래로 밀리지 않게 폰트 크기 조절 */
+    .data-value {
+        font-size: 1.2rem;
+    }
+
+    .meal-widget {
+        grid-column: span 1;
+        /* 오늘/내일 급식을 1:1로 나란히 배치하여 높이 절약 */
+    }
+
+    .meal-list {
+        font-size: 0.85rem;
+        /* 글자 크기를 살짝 줄여 가독성 확보 */
+    }
+}

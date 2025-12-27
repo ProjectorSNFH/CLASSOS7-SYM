@@ -1,0 +1,212 @@
+/* board-header */
+.board-header {
+    margin-bottom: 30px;
+}
+
+.board-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.board-header p {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* 정렬 버튼 */
+.sort-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sort-controls button {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.sort-controls button:hover {
+    background: var(--border-color);
+}
+
+
+.sort-controls button.active-sort {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+    background: rgba(255, 0, 0, 0.05);
+}
+
+/* 표 형태 리스트 */
+.board-table {
+    width: 100%;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    /* 제목 | 날짜 비율 */
+    gap: 15px;
+    padding: 10px 15px;
+    background: rgba(128, 128, 128, 0.05);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.board-item {
+    display: grid;
+    grid-template-columns: 1fr 120px; /* 헤더와 동일하게 맞춤 */
+    gap: 15px;
+    padding: 18px 15px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.board-item:hover {
+    background: rgba(128, 128, 128, 0.03);
+}
+
+.col-title {
+    flex: 1;
+    font-weight: 500;
+    padding-right: 20px;
+}
+
+.col-date {
+    width: 120px;
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
+
+/* --- board.css 추가 및 수정 --- */
+
+/* 날짜와 D-Day를 감싸는 컨테이너 */
+.date-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* 데스크탑에선 오른쪽 정렬 */
+    gap: 8px; /* 날짜와 D-Day 사이 간격 */
+}
+
+/* D-Day 태그 기본 스타일 수정 */
+.d-day-tag {
+    font-size: 0.8rem;
+    color: var(--accent-red);
+    white-space: nowrap;
+    margin-top: 0; /* 기존 마진 제거 */
+}
+
+/* '까지' 텍스트 기본적으로 숨김 */
+.mobile-until {
+    display: none;
+    font-size: 0.8rem;
+    color: #888;
+    margin-right: 2px;
+}
+
+/* 카테고리 태그 스타일 */
+.category-tag {
+    color: #888;
+    font-size: 0.8rem;
+    margin-right: 8px;
+}
+
+/* 모바일 대응 */
+@media (max-width: 600px) {
+    .table-header {
+        display: none; /* 모바일에서 표 헤더 숨김 */
+    }
+
+    .board-item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .col-title {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .col-date {
+        width: 100%;
+    }
+
+    .date-wrapper {
+        justify-content: flex-start; /* 모바일에선 왼쪽 정렬 */
+    }
+
+    /* 모바일에서만 '까지' 표시 */
+    .mobile-until {
+        display: inline;
+    }
+    
+    .date-val {
+        font-weight: 600;
+    }
+}
+
+/* 검색 및 필터 영역 */
+.board-utils {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-color);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-box input:focus {
+    border-color: var(--accent-red);
+}
+
+/* 체크박스 커스텀 */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #888;
+    user-select: none;
+}
+
+.checkbox-container input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent-red);
+}
+
+/* 마감된(완료된) 항목 스타일 */
+.board-item.completed {
+    opacity: 0.4;
+    /* 흐릿하게 표시 */
+}
+
+.board-item.completed .col-title {
+    text-decoration: line-through;
+    /* 가로줄 추가 (선택 사항) */
+}
