@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게시판</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../CSS/board.css">
-    <link rel="icon" href="../assets/favicon.png">
+    <title>대시보드</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/CSS/admin.css">
+    <link rel="icon" href="/assets/favicon.png">
 </head>
 
 <body>
+
     <div class="dot-overlay"></div>
 
     <nav>
@@ -19,8 +20,8 @@
         </div>
 
         <div class="nav-center">
-            <a href="dashboard.html">대시보드</a>
-            <a href="board.html" class="active">수행평가 및 안내사항</a>
+            <a href="dashboard.html" class="active">대시보드</a>
+            <a href="board.html">수행평가 및 안내사항</a>
             <a href="datacenter.html">데이터 센터</a>
         </div>
 
@@ -51,40 +52,43 @@
     </div>
 
     <main class="main-container">
-        <header class="board-header">
-            <h1>수행평가 및 안내사항</h1>
-            <p>전체 일정 및 공지사항을 확인하세요.</p>
-        </header>
-
-        <section class="section-card">
-
-            <div class="board-utils">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="내용을 기준으로 검색어를 입력하세요. (공백으로 구분)" autocomplete="off">
-                </div>
-            </div>
-
-            <div class="sort-controls">
-                <button onclick="sortData('title')" id="sort-title-btn">내용순 <span id="sort-title-icon">↕</span></button>
-                <button onclick="sortData('date')" id="sort-date-btn" class="active-sort">기한순 <span
-                        id="sort-date-icon">↑</span></button>
-
-                <label class="checkbox-container" style="padding-left: 10px;">
-                    <input type="checkbox" id="showCompleted" checked>
-                    <span class="checkmark"></span>
-                    마감된 항목 표시
-                </label>
-            </div>
-
-            <div class="board-table" style="padding-bottom: 20px;">
-                <div class="table-header">
-                    <div class="col-title">내용</div>
-                    <div class="col-date">기한 / D-Day</div>
-                </div>
-                <div id="board-list-container">
-                </div>
+        <section class="section-card profile-card">
+            <img src="../assets/account.png" alt="Profile" class="profile-img">
+            <div class="profile-info">
+                <h2 id="display-name">불러오는 중입니다...</h2>
+                <p id="display-meta">불러오는 중입니다...</p>
             </div>
         </section>
+
+        <div class="dashboard-grid">
+            <section class="section-card">
+                <div class="widget-title">지각한 사람</div>
+                <div class="data-value" id="late-list">
+                </div>
+            </section>
+
+            <section class="section-card">
+                <div class="widget-title">청소 당번</div>
+                <div id="duty-container" style="display: flex; gap: 20px;" class="duty-container">
+                </div>
+            </section>
+
+            <section class="section-card" style="grid-column: span 2; ">
+                <div class="widget-title">수행평가 및 안내사항</div>
+                <div id="notice-list" style="display: flex; flex-direction: column; gap: 10px;">
+                </div>
+            </section>
+
+            <section class="section-card meal-widget" style="grid-column: span 2; ">
+                <div class="widget-title">오늘의 급식</div>
+                <div id="today-meal" class="meal-list">데이터를 불러오는 중...</div>
+            </section>
+
+            <section class="section-card meal-widget" style="grid-column: span 2; ">
+                <div class="widget-title">내일의 급식</div>
+                <div id="tomorrow-meal" class="meal-list">데이터를 불러오는 중...</div>
+            </section>
+        </div>
     </main>
 
     <footer>
@@ -99,7 +103,8 @@
     </footer>
 
     <script src="../script.js"></script>
-    <script src="../SCRIPT/board.js"></script>
+    <script src="../SCRIPT/dashboard.js"></script>
+    <script src="../SCRIPT/mealtable.js"></script>
 </body>
 
 </html>
