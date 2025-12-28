@@ -1,0 +1,9 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/(css|js|assets)/(.*)",
+      "destination": "/404"
+    }
+  ]
+}
