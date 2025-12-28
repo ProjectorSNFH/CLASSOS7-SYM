@@ -1,14 +1,9 @@
 {
   "cleanUrls": true,
-  "headers": [
+  "rewrites": [
     {
-      "source": "/(.*).map",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'none';"
-        }
-      ]
+      "source": "/(css|js|assets)/(.*)",
+      "destination": "/404"
     }
   ]
 }
