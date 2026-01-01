@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 패널 - CLASS WEB</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../CSS/admin.css">
+    <link rel="icon" href="../assets/favicon.png">
+</head>
+
+<style>
+    .col-select {
+        width: 80px;
+        text-align: center !important;
+        display: none;
+    }
+
+    /* 관리 열(연필 버튼) 너비를 좁게 설정 */
+    .col-manage {
+        width: 80px;
+        text-align: center !important;
+    }
+
+    /* 연필 버튼 스타일 */
+    .edit-icon-btn {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: var(--accent-red);
+        transition: transform 0.2s;
+    }
+
+    .edit-icon-btn:hover {
+        transform: scale(1.2);
+    }
+
+    /* 수정 완료 시 체크 표시 기호 */
+    .save-icon-btn {
+        color: #2ecc71;
+        /* 완료 시에는 초록색 계열로 변경 (선택 사항) */
+    }
+
+    /* 테이블 전체 폰트 및 라인 정리 */
+    .admin-table {
+        table-layout: fixed;
+        /* 열 너비 고정 */
+    }
+
+    /* [추가] 모바일 뒤로가기 버튼 스타일 */
+    .mobile-back-btn {
+        display: none;
+        /* 기본은 숨김 */
+        font-size: 20px !important;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: bold;
+        width: 40px;
+        height: 40px;
+        text-align: center;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-back-btn {
+            display: inline-block;
+        }
+
+        /* 모바일에서만 보임 */
+        .nav-center {
+            display: flex;
+            align-items: center;
+        }
+
+        .active {
+            display: none;
+        }
+    }
+</style>
+
+<body>
+
+    <div class="dot-overlay"></div>
+
+    <nav>
+        <div class="nav-left">
+            <span class="logo-text">CLASS WEB</span>
+            <p>Admin Dash</p>
+        </div>
+
+        <div class="nav-center">
+            <a href="dashboard.html" class="active">← 대시보드로 돌아가기</a>
+            <a href="dashboard.html" class="mobile-back-btn">←</a>
+        </div>
+
+        <div class="nav-right">
+            <button class="nothing-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </nav>
+
+    <main class="main-container admin-main">
+        <header class="admin-header">
+            <h1>시스템 관리</h1>
+            <p>수정하려는 항목을 선택하세요.</p>
+        </header>
+
+        <div class="admin-grid">
+            <a href="adminDash.html" class="admin-card">
+                <div class="admin-icon">📊</div>
+                <span>대시보드 수정</span>
+                <p>지각생, 청소 당번 관리</p>
+            </a>
+            <a href="adminBoard.html" class="admin-card">
+                <div class="admin-icon">📋</div>
+                <span>수행평가 및 안내사항 수정</span>
+                <p>게시글 추가, 삭제, 마감 관리</p>
+            </a>
+            <a href="adminData.html" class="admin-card">
+                <div class="admin-icon">📂</div>
+                <span>데이터 센터 수정</span>
+                <p>파일 업로드 및 자료실 관리</p>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <button class="mode-toggle" onclick="toggleTheme()">
+            <img src="../assets/vmode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">다크/라이트 모드</span>
+        </button>
+        <button class="mode-toggle" id="seasonalModeBtn" onclick="toggleSeasonalMode()">
+            <img src="../assets/smode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">스노우 모드</span>
+        </button>
+    </footer>
+
+    <script src="../script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수행평가 관리 - CLASS WEB</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../CSS/admin.css">
+    <style>
+        /* 관리자 보드 전용 스타일 */
+        .board-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(128, 128, 128, 0.1);
+        }
+
+        .btn-red {
+            background: var(--accent-red) !important;
+            color: white !important;
+            border: none;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .admin-table th {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* 열 너비 설정 */
+        .col-select {
+            width: 80px;
+            text-align: center !important;
+            display: none;
+        }
+
+        /* 기본 숨김 */
+        .col-content {
+            flex: 1;
+        }
+
+        .col-manage {
+            width: 120px;
+            text-align: center !important;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-red);
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+
+        .row-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-red);
+        }
+
+        /* 모드 활성화 시 스타일 */
+        body.selection-mode .col-select {
+            display: table-cell;
+        }
+
+        /* 연필/체크 버튼 디자인 */
+        .edit-icon-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            /* 동그란 모양 */
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 0 auto;
+            /* 셀 중앙 정렬 */
+            font-size: 1rem;
+        }
+
+        /* 수정 모드(연필)일 때 호버 */
+        .edit-icon-btn:hover {
+            background: rgba(128, 128, 128, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* 완료 모드(체크)일 때 강조 스타일 */
+        .save-icon-btn {
+            background: rgba(46, 204, 113, 0.1);
+            /* 연한 초록 배경 */
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        .save-icon-btn:hover {
+            background: #2ecc71;
+            color: white;
+        }
+
+        /* 내용 열 스타일 보정 */
+        .col-content span {
+            display: block;
+            padding: 8px 0;
+        }
+
+        /* [추가] 모바일 뒤로가기 버튼 스타일 */
+        .mobile-back-btn {
+            display: none;
+            /* 기본은 숨김 */
+            font-size: 20px !important;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-back-btn {
+                display: inline-block;
+            }
+
+            /* 모바일에서만 보임 */
+            .nav-center {
+                display: flex;
+                align-items: center;
+            }
+
+            .active {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dot-overlay"></div>
+
+    <nav>
+        <div class="nav-left">
+            <span class="logo-text">CLASS WEB</span>
+            <p>Admin Dash</p>
+        </div>
+
+        <div class="nav-center">
+            <a href="admin.html" class="active">← 관리자 패널로 돌아가기</a>
+            <a href="admin.html" class="mobile-back-btn">←</a>
+        </div>
+
+        <div class="nav-right">
+            <button class="nothing-btn" onclick="logout()">로그아웃</button>
+        </div>
+    </nav>
+
+    <main class="main-container">
+        <header class="admin-header">
+            <h1>수행평가 및 안내사항 수정</h1>
+            <p>항목을 추가, 수정하거나 선택하여 삭제할 수 있습니다.</p>
+        </header>
+
+        <section class="section-card">
+            <div class="board-controls">
+                <button class="control-btn" id="toggleSelectMode" onclick="toggleSelectionMode()">선택 모드</button>
+                <button class="control-btn" onclick="addNewRow()">+ 항목 추가</button>
+                <button class="control-btn btn-red" id="deleteBtn" style="display: none;" onclick="deleteSelected()">선택
+                    삭제</button>
+            </div>
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th class="col-select">선택</th>
+                        <th class="col-content">내용</th>
+                        <th class="col-date">기한 일자</th>
+                        <th class="col-manage">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-board-body">
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="../script.js"></script>
+    <script src="../SCRIPT/adminBoard.js"></script>
+</body>
+
+</html>

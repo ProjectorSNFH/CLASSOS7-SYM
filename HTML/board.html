@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../CSS/board.css">
+    <link rel="icon" href="../assets/favicon.png">
+</head>
+
+<body>
+    <div class="dot-overlay"></div>
+
+    <nav>
+        <div class="nav-left">
+            <span class="logo-text">CLASS WEB</span>
+        </div>
+
+        <div class="nav-center">
+            <a href="dashboard.html">대시보드</a>
+            <a href="board.html" class="active">수행평가 및 안내사항</a>
+            <a href="datacenter.html">데이터 센터</a>
+        </div>
+
+        <div class="mobile-menu-container" style="display: none;">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <div class="nav-right">
+            <button class="nothing-btn" id="accountBtn">계정</button>
+            <div id="accountDropdown" class="dropdown-content">
+                <a href="admin.html">관리자 패널</a>
+                <a href="#" onclick="logout()" class="logout-btn">로그아웃</a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mobileNavOverlay" class="mobile-nav-overlay">
+        <div class="mobile-nav-content">
+            <div class="widget-title">메뉴</div>
+            <a href="dashboard.html">대시보드</a>
+            <a href="board.html">수행평가 및 안내사항</a>
+            <a href="datacenter.html">데이터 센터</a>
+        </div>
+    </div>
+
+    <main class="main-container">
+        <header class="board-header">
+            <h1>수행평가 및 안내사항</h1>
+            <p>전체 일정 및 공지사항을 확인하세요.</p>
+        </header>
+
+        <section class="section-card">
+
+            <div class="board-utils">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="내용을 기준으로 검색어를 입력하세요. (공백으로 구분)" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="sort-controls">
+                <button onclick="sortData('title')" id="sort-title-btn">내용순 <span id="sort-title-icon">↕</span></button>
+                <button onclick="sortData('date')" id="sort-date-btn" class="active-sort">기한순 <span
+                        id="sort-date-icon">↑</span></button>
+
+                <label class="checkbox-container" style="padding-left: 10px;">
+                    <input type="checkbox" id="showCompleted" checked>
+                    <span class="checkmark"></span>
+                    마감된 항목 표시
+                </label>
+            </div>
+
+            <div class="board-table" style="padding-bottom: 20px;">
+                <div class="table-header">
+                    <div class="col-title">내용</div>
+                    <div class="col-date">기한 / D-Day</div>
+                </div>
+                <div id="board-list-container">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <button class="mode-toggle" onclick="toggleTheme()">
+            <img src="../assets/vmode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">다크/라이트 모드</span>
+        </button>
+        <button class="mode-toggle" id="seasonalModeBtn" onclick="toggleSeasonalMode()">
+            <img src="../assets/smode.png" alt="Toggle Mode">
+            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">스노우 모드</span>
+        </button>
+    </footer>
+
+    <script src="../script.js"></script>
+    <script src="../SCRIPT/board.js"></script>
+</body>
+
+</html>
