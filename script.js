@@ -172,3 +172,56 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('seasonal-mode');
     }
 });
+
+// script.js (모든 페이지 공통)
+const API_BASE_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app";
+
+// 쿠키에서 특정 값을 가져오는 함수
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// 로그아웃 처리 함수
+function forceLogout(message) {
+    alert(message || "세션이 만료되었거나 관리자에 의해 종료되었습니다.");
+    // 모든 쿠키 삭제
+    document.cookie = "isLoggedIn=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "userName=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "userRole=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // 로그인 페이지로 이동
+    window.location.replace("/index.html"); // 경로에 맞게 수정
+}
+
+// 실시간 세션 체크 (5초마다 실행)
+async function checkSession() {
+    // 로그인 상태일 때만 체크
+    if (getCookie('isLoggedIn') === 'true') {
+        const userName = getCookie('userName');
+        
+        try {
+            // 서버의 /test 혹은 세션 확인 전용 API에 내 이름을 보냄
+            const response = await fetch(`${API_BASE_URL}/test?user=${userName}`);
+            const data = await response.json();
+
+            // 서버 응답에 내 세션이 없거나 실패라면 로그아웃
+            if (data.connection !== 1) {
+                forceLogout("서버 연결에 문제가 발생했습니다.");
+            }
+            
+            // 만약 서버에서 중복 로그인이나 강제 로그아웃을 구현했다면 
+            // 아래처럼 activeSessions에 내가 있는지 확인하는 로직이 필요합니다.
+            if (data.activeSessions && !data.activeSessions.includes(userName)) {
+                forceLogout("다른 기기에서 로그인했거나 관리자가 로그아웃시켰습니다.");
+            }
+
+        } catch (error) {
+            console.error("세션 체크 중 에러:", error);
+            // 서버가 완전히 죽었을 때도 로그아웃 시킬지 결정 (보통은 유지하되 경고만 띄움)
+        }
+    }
+}
+
+// 5초마다 실행
+setInterval(checkSession, 5000);

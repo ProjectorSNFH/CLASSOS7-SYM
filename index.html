@@ -66,13 +66,28 @@
             padding: 12px;
             border-radius: 12px;
             font-size: 0.85rem;
-            display: none; /* 기본 숨김 */
+            display: none;
+            /* 기본 숨김 */
             transition: all 0.3s ease;
         }
 
-        .status-error { background: rgba(255, 59, 48, 0.15); color: #ff453a; border: 1px solid #ff453a; }
-        .status-loading { background: rgba(255, 255, 255, 0.05); color: #ebebf5; border: 1px solid #444; }
-        .status-success { background: rgba(48, 209, 88, 0.15); color: #32d74b; border: 1px solid #32d74b; }
+        .status-error {
+            background: rgba(255, 59, 48, 0.15);
+            color: #ff453a;
+            border: 1px solid #ff453a;
+        }
+
+        .status-loading {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ebebf5;
+            border: 1px solid #444;
+        }
+
+        .status-success {
+            background: rgba(48, 209, 88, 0.15);
+            color: #32d74b;
+            border: 1px solid #32d74b;
+        }
 
         .nothing-btn {
             position: relative;
@@ -93,7 +108,11 @@
             display: none;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
@@ -133,21 +152,26 @@
         const loader = document.getElementById('loader');
         const statusMessage = document.getElementById('statusMessage');
 
-        // 메시지 표시 함수
         function showStatus(text, type) {
             statusMessage.innerText = text;
             statusMessage.style.display = 'block';
             statusMessage.className = `status-message status-${type}`;
         }
 
-        // 페이지 로드 시 서버 연결 체크
+        // 서버 상태를 저장할 변수
+        let isServerReady = false;
+
         window.onload = async function () {
             console.log("서버 연결 확인 중...");
             try {
                 const response = await fetch(`${SERVER_URL}/test`);
                 const data = await response.json();
+
                 if (data.connection === 1) {
+                    isServerReady = true;
                     console.log("%c✅ 서버 연결 성공", "color: #00ff00; font-weight: bold;");
+                } else if (data.connection === 0) {
+                    showStatus("⚠️ 시스템 점검 중입니다. (서버 정지됨)", "error");
                 }
             } catch (error) {
                 console.error("%c❌ 서버 연결 실패", "color: #ff0000; font-weight: bold;");
@@ -155,14 +179,16 @@
             }
         };
 
-        // 로그인 핸들러
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            if (!isServerReady) {
+                showStatus("서버가 응답하지 않습니다. 로그인을 시도할 수 없습니다.", "error");
+                return;
+            }
 
             const id = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            // UI를 로딩 상태로 변경
             loginBtn.disabled = true;
             btnText.style.display = 'none';
             loader.style.display = 'block';
@@ -178,29 +204,16 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // 성공 처리
-                    showStatus(`${result.user.name}님 환영합니다! 잠시 후 이동합니다.`, "success");
-                    
+                    showStatus(`${result.user.name}님 환영합니다!`, "success");
                     document.cookie = `isLoggedIn=true; path=/; SameSite=None; Secure`;
                     document.cookie = `userName=${result.user.name}; path=/; SameSite=None; Secure`;
                     document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
-                    
-                    setTimeout(() => {
-                        window.location.replace("HTML/dashboard.html");
-                    }, 1200);
+                    setTimeout(() => { window.location.replace("HTML/dashboard.html"); }, 1200);
                 } else {
-                    // 서버에서 전송한 에러 메시지 (비번 틀림 등)
                     throw new Error(result.message || "아이디 또는 비밀번호가 틀렸습니다.");
                 }
             } catch (error) {
-                // 에러 처리 (네트워크 에러 포함)
-                let errorMsg = error.message;
-                if (errorMsg.includes("Failed to fetch")) {
-                    errorMsg = "서버와 통신할 수 없습니다. (네트워크 확인)";
-                }
-                showStatus(errorMsg, "error");
-
-                // UI 원상복구
+                showStatus(error.message.includes("fetch") ? "서버 연결 실패" : error.message, "error");
                 loginBtn.disabled = false;
                 btnText.style.display = 'block';
                 loader.style.display = 'none';
