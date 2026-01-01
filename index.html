@@ -208,6 +208,7 @@
                     document.cookie = `isLoggedIn=true; path=/; SameSite=None; Secure`;
                     document.cookie = `userName=${result.user.name}; path=/; SameSite=None; Secure`;
                     document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
+                    document.cookie = `userNumber=${result.user.number}; path=/; SameSite=None; Secure`;
                     setTimeout(() => { window.location.replace("HTML/dashboard.html"); }, 1200);
                 } else {
                     throw new Error(result.message || "아이디 또는 비밀번호가 틀렸습니다.");
