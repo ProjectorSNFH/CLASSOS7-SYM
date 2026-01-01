@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLASS OS - LOGIN</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="/assets/favicon.png">
     <style>
         /* 로그인 페이지 전용 스타일 */
         .login-wrapper {
@@ -88,56 +87,51 @@
 
     <script src="script.js"></script>
     <script>
-        // index.html 하단 <script> 부분
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+            const id = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-            // 1. 비밀번호 확인 (더미 데이터)
-            // 학번: admin / 비번: 1234 -> 관리자
-            // 학번: 아무거나 / 비번: 1234 -> 학생
-            if (pass === "1234") {
-                // 2. 쿠키 저장 (script.js의 함수를 사용하되, 혹시 모르니 직접 정의 방식으로 안전하게 호출)
-                document.cookie = "isLoggedIn=true; path=/";
-                document.cookie = "userName=" + user + "; path=/";
+            // 1. 본인의 Koyeb 서버 주소 (끝에 /login 확인)
+            const SERVER_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app/login";
 
-                if (user === "admin") {
-                    document.cookie = "userRole=admin; path=/";
+            try {
+                // 2. 서버에 로그인 요청 보내기
+                const response = await fetch(SERVER_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // 3. 로그인 성공 시 서버가 준 정보 확인
+                    console.log("로그인 성공:", result.user);
+
+                    // 쿠키 저장 (서버가 준 정보를 기반으로 저장)
+                    // result.user 안에는 { number, name, role }이 들어있음
+                    document.cookie = `isLoggedIn=true; path=/; SameSite=None; Secure`;
+                    document.cookie = `userName=${result.user.name}; path=/; SameSite=None; Secure`;
+                    document.cookie = `userNumber=${result.user.number}; path=/; SameSite=None; Secure`;
+                    document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
+
+                    alert(`${result.user.name}님, 환영합니다!`);
+
+                    // 4. 대시보드로 이동
+                    window.location.replace("HTML/dashboard.html");
                 } else {
-                    document.cookie = "userRole=student; path=/";
+                    // 5. 로그인 실패 시 (아이디/비번 불일치 등)
+                    alert(result.message || "로그인에 실패했습니다.");
                 }
-
-                // 3. 강제 이동 (경로를 절대경로처럼 인식하게 처리)
-                window.location.replace("dashboard.html");
-            } else {
-                alert("비밀번호가 틀렸습니다. (테스트 비번: 1234)");
+            } catch (error) {
+                console.error("서버 연결 에러:", error);
+                alert("서버와 통신 중 에러가 발생했습니다. (서버가 켜져 있는지 확인하세요)");
             }
         });
-
-
-        /*         
-                // 로그인 전용 스크립트
-                document.getElementById('loginForm').addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    const user = document.getElementById('username').value;
-        
-                    // 임시 로그인 로직 (쿠키 저장)
-                    // 실제 서비스 시에는 해싱 및 보안 처리가 필요하지만 요청하신 대로 구현합니다.
-                    setCookie("isLoggedIn", "true", 7);
-                    setCookie("userName", user, 7);
-        
-                    // 관리자 여부 테스트 (예: 학번이 'admin'이면 관리자)
-                    if (user === "admin") {
-                        setCookie("userRole", "admin", 7);
-                    } else {
-                        setCookie("userRole", "student", 7);
-                    }
-        
-                    window.location.href = "HTML/dashboard.html";
-                });
-         */
     </script>
 </body>
 
