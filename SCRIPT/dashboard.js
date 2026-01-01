@@ -8,6 +8,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // 1. 쿠키에서 필요한 정보만 추출
+    const userName = decodeURIComponent(getCookie('userName') || "사용자");
+    const userRole = getCookie('userRole') || "N";
+    const userNumber = getCookie('userNumber') || "0";
+    
+    // 역할을 한글로 변환
+    const roleMap = { 'A': '관리자', 'T': '대시보드 관리', 'N': '학생', 'D': '데이터센터 관리', 'B': '게시판 관리' };
+
+    // 2. HTML 엘리먼트에 직접 주입 (더미 데이터 대신 쿠키값 사용)
+    const displayName = document.getElementById('display-name');
+    const displayMeta = document.getElementById('display-meta');
+
+    if (displayName) displayName.innerText = userName;
+    if (displayMeta) {
+        // 학년, 반은 고정값이거나 쿠키에 없다면 아래처럼 구성
+        displayMeta.innerText = `1학년 5반 ${userNumber}번 · ${roleMap[userRole]}`;
+    }
+
     const userData = JSON.parse(decodeURIComponent(userCookie));
 
     // 2. 대시보드 데이터 구조 생성 (사용자 정보는 쿠키에서, 나머지는 임시 유지)
