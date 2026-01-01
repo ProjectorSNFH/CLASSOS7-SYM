@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. 서버에서 가져온 데이터 (전체 데이터라고 가정)
+    const roleMap = { 'A': '관리자', 'T': '대시보드 관리', 'N': '학생', 'D': '데이터센터 관리', 'B': '게시판 관리' };
     const serverData = {
         user: {
-            name: "홍길동",
+            name: decodeURIComponent(getCookie('userName') || "알 수 없는 사용자"),
             grade: 1,
             class: 5,
-            number: 1,
-            role: "일반 학생"
+            number: getCookie('userNumber') || "#",
+            role: roleMap[getCookie('userRole') || "N"]
         },
         lateStudents: ["김철수", "이영희", "박지민"],
         cleaningDuty: {
@@ -20,25 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 3, title: "과학: 화학 반응 실험 보고서", date: "2025-12-25", category: "수행" }, // 가장 임박
             { id: 4, title: "국어: 현대시 분석 발표", date: "2026-01-10", category: "발표" },
             { id: 5, title: "체육: 배드민턴 실기 테스트", date: "2025-12-28", category: "수행" }
-        ]
+        ],
     };
-
-    const userName = decodeURIComponent(getCookie('userName') || "사용자");
-    const userRole = getCookie('userRole') || "N";
-    const userNumber = getCookie('userNumber') || "0";
-    
-    // 역할을 한글로 변환
-    const roleMap = { 'A': '관리자', 'T': '대시보드 관리', 'N': '학생', 'D': '데이터센터 관리', 'B': '게시판 관리' };
-
-    // 2. HTML 엘리먼트에 직접 주입 (더미 데이터 대신 쿠키값 사용)
-    const displayName = document.getElementById('display-name');
-    const displayMeta = document.getElementById('display-meta');
-
-    if (displayName) displayName.innerText = userName;
-    if (displayMeta) {
-        // 학년, 반은 고정값이거나 쿠키에 없다면 아래처럼 구성
-        displayMeta.innerText = `1학년 5반 ${userNumber}번 · ${roleMap[userRole]}`;
-    }
 
     renderDashboard(serverData);
 });
