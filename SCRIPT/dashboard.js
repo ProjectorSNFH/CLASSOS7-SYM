@@ -43,6 +43,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDashboard(serverData);
 });
 
+// 쿠키 읽기용 함수 (필수)
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
 // D-Day 계산 함수 (대시보드 전용)
 function getDDayCount(targetDate) {
     const today = new Date();
