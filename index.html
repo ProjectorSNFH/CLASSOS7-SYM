@@ -128,7 +128,7 @@
                     document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
 
                     alert(`${result.user.name}님 환영합니다!`);
-                    window.location.replace("dashboard.html");
+                    window.location.replace("HTML/dashboard.html");
                 } else {
                     alert(result.message || "로그인 실패");
                 }
