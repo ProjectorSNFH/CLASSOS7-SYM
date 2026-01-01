@@ -87,49 +87,53 @@
 
     <script src="script.js"></script>
     <script>
+        const SERVER_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app";
+
+        // 페이지 로드 시 실행
+        window.onload = async function () {
+            console.log("서버 연결 확인 중...");
+            try {
+                const response = await fetch(`${SERVER_URL}/test`);
+                const data = await response.json();
+
+                if (data.connection === 1) {
+                    console.log("%c✅ 서버 연결 성공: 상태 양호 (값: 1)", "color: #00ff00; font-weight: bold;");
+                } else {
+                    console.log("%c⚠️ 서버 응답이 올바르지 않습니다.", "color: #ffaa00;");
+                }
+            } catch (error) {
+                console.error("%c❌ 서버 연결 실패: 서버가 꺼져있거나 주소가 틀립니다.", "color: #ff0000; font-weight: bold;");
+            }
+        };
+
+        // 기존 로그인 폼 이벤트 리스너
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const id = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            // 1. 본인의 Koyeb 서버 주소 (끝에 /login 확인)
-            const SERVER_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app/login";
-
             try {
-                // 2. 서버에 로그인 요청 보내기
-                const response = await fetch(SERVER_URL, {
+                const response = await fetch(`${SERVER_URL}/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, password })
                 });
 
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // 3. 로그인 성공 시 서버가 준 정보 확인
-                    console.log("로그인 성공:", result.user);
-
-                    // 쿠키 저장 (서버가 준 정보를 기반으로 저장)
-                    // result.user 안에는 { number, name, role }이 들어있음
                     document.cookie = `isLoggedIn=true; path=/; SameSite=None; Secure`;
                     document.cookie = `userName=${result.user.name}; path=/; SameSite=None; Secure`;
-                    document.cookie = `userNumber=${result.user.number}; path=/; SameSite=None; Secure`;
                     document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
 
-                    alert(`${result.user.name}님, 환영합니다!`);
-
-                    // 4. 대시보드로 이동
+                    alert(`${result.user.name}님 환영합니다!`);
                     window.location.replace("HTML/dashboard.html");
                 } else {
-                    // 5. 로그인 실패 시 (아이디/비번 불일치 등)
-                    alert(result.message || "로그인에 실패했습니다.");
+                    alert(result.message || "로그인 실패");
                 }
             } catch (error) {
-                console.error("서버 연결 에러:", error);
-                alert("서버와 통신 중 에러가 발생했습니다. (서버가 켜져 있는지 확인하세요)");
+                alert("서버 연결 에러가 발생했습니다.");
             }
         });
     </script>
