@@ -59,6 +59,41 @@
             font-size: 0.8rem;
             color: #666;
         }
+
+        /* --- 추가된 UI 스타일 --- */
+        .status-message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: none; /* 기본 숨김 */
+            transition: all 0.3s ease;
+        }
+
+        .status-error { background: rgba(255, 59, 48, 0.15); color: #ff453a; border: 1px solid #ff453a; }
+        .status-loading { background: rgba(255, 255, 255, 0.05); color: #ebebf5; border: 1px solid #444; }
+        .status-success { background: rgba(48, 209, 88, 0.15); color: #32d74b; border: 1px solid #32d74b; }
+
+        .nothing-btn {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 45px;
+        }
+
+        /* 로딩 스피너 */
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 
@@ -76,8 +111,13 @@
                 <div class="input-group">
                     <input type="password" id="password" placeholder="Password" required>
                 </div>
-                <button type="submit" class="nothing-btn" style="width: 100%; margin-top: 10px;">SIGN IN</button>
+                <button type="submit" id="loginBtn" class="nothing-btn" style="width: 100%; margin-top: 10px;">
+                    <span id="btnText">SIGN IN</span>
+                    <div id="loader" class="loader"></div>
+                </button>
             </form>
+
+            <div id="statusMessage" class="status-message"></div>
 
             <div class="login-footer">
                 © 2025 CLASS WEB by SNFH
@@ -88,30 +128,45 @@
     <script src="script.js"></script>
     <script>
         const SERVER_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app";
+        const loginBtn = document.getElementById('loginBtn');
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('loader');
+        const statusMessage = document.getElementById('statusMessage');
 
-        // 페이지 로드 시 실행
+        // 메시지 표시 함수
+        function showStatus(text, type) {
+            statusMessage.innerText = text;
+            statusMessage.style.display = 'block';
+            statusMessage.className = `status-message status-${type}`;
+        }
+
+        // 페이지 로드 시 서버 연결 체크
         window.onload = async function () {
             console.log("서버 연결 확인 중...");
             try {
                 const response = await fetch(`${SERVER_URL}/test`);
                 const data = await response.json();
-
                 if (data.connection === 1) {
-                    console.log("%c✅ 서버 연결 성공: 상태 양호 (값: 1)", "color: #00ff00; font-weight: bold;");
-                } else {
-                    console.log("%c⚠️ 서버 응답이 올바르지 않습니다.", "color: #ffaa00;");
+                    console.log("%c✅ 서버 연결 성공", "color: #00ff00; font-weight: bold;");
                 }
             } catch (error) {
-                console.error("%c❌ 서버 연결 실패: 서버가 꺼져있거나 주소가 틀립니다.", "color: #ff0000; font-weight: bold;");
+                console.error("%c❌ 서버 연결 실패", "color: #ff0000; font-weight: bold;");
+                showStatus("⚠️ 서버가 오프라인 상태입니다. 나중에 다시 시도하세요.", "error");
             }
         };
 
-        // 기존 로그인 폼 이벤트 리스너
+        // 로그인 핸들러
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const id = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+
+            // UI를 로딩 상태로 변경
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            showStatus("인증 정보를 확인하는 중...", "loading");
 
             try {
                 const response = await fetch(`${SERVER_URL}/login`, {
@@ -123,17 +178,32 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
+                    // 성공 처리
+                    showStatus(`${result.user.name}님 환영합니다! 잠시 후 이동합니다.`, "success");
+                    
                     document.cookie = `isLoggedIn=true; path=/; SameSite=None; Secure`;
                     document.cookie = `userName=${result.user.name}; path=/; SameSite=None; Secure`;
                     document.cookie = `userRole=${result.user.role}; path=/; SameSite=None; Secure`;
-
-                    alert(`${result.user.name}님 환영합니다!`);
-                    window.location.replace("HTML/dashboard.html");
+                    
+                    setTimeout(() => {
+                        window.location.replace("HTML/dashboard.html");
+                    }, 1200);
                 } else {
-                    alert(result.message || "로그인 실패");
+                    // 서버에서 전송한 에러 메시지 (비번 틀림 등)
+                    throw new Error(result.message || "아이디 또는 비밀번호가 틀렸습니다.");
                 }
             } catch (error) {
-                alert("서버 연결 에러가 발생했습니다.");
+                // 에러 처리 (네트워크 에러 포함)
+                let errorMsg = error.message;
+                if (errorMsg.includes("Failed to fetch")) {
+                    errorMsg = "서버와 통신할 수 없습니다. (네트워크 확인)";
+                }
+                showStatus(errorMsg, "error");
+
+                // UI 원상복구
+                loginBtn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
             }
         });
     </script>
