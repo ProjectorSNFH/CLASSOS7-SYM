@@ -171,6 +171,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (getCookie("seasonalMode") === "true") {
         document.body.classList.add('seasonal-mode');
     }
+
+    const userRole = getCookie("userRole");
+  const accDropdown = document.getElementById('accountDropdown');
+
+  // 관리자 패널 버튼 제어 로직
+  if (accDropdown) {
+    // 1. 기존 드롭다운 내용을 가져옴
+    // 만약 HTML에 이미 버튼이 있다면 찾아서 숨기고, 없다면 생성하는 방식입니다.
+    const adminLink = document.getElementById('adminPanelLink'); // HTML에 id="adminPanelLink" 추가 권장
+
+    if (userRole === "N") {
+        // 일반 학생(N)이면 관리자 링크를 아예 삭제하거나 숨김
+        if (adminLink) adminLink.remove(); 
+    } else {
+        // 관리자(A)나 선생님(T)인데 버튼이 아직 없다면 동적으로 생성해줄 수도 있습니다.
+        if (!adminLink) {
+            const link = document.createElement('a');
+            link.id = "adminPanelLink";
+            link.href = "/auth"; // 서버의 관리자 주소
+            link.innerText = "관리자 패널";
+            link.style.color = "var(--accent-red)"; // 강조 색상 (선택)
+            
+            // 로그아웃 버튼 앞에 삽입 (가장 첫 번째 자식으로)
+            accDropdown.prepend(link);
+        }
+    }
+  }
 });
 
 // script.js (모든 페이지 공통)
