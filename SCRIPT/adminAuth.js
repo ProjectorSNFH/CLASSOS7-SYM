@@ -23,4 +23,6 @@
         
         window.location.replace(window.location.origin + "/" + prefix + "dashboard.html");
     }
+    console.log(userRole);
+    console.log(userRole === "N");
 })();
