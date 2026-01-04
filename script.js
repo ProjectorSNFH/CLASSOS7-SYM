@@ -195,30 +195,34 @@ function forceLogout(message) {
 }
 
 // 실시간 세션 체크 (5초마다 실행)
+/* script.js 수정 제안 */
+
 async function checkSession() {
-    // 로그인 상태일 때만 체크
     if (getCookie('isLoggedIn') === 'true') {
-        const userName = getCookie('userName');
+        // [수정] decodeURIComponent를 사용하여 서버 데이터와 형식을 맞춤
+        const rawUserName = getCookie('userName');
+        if (!rawUserName) return; // 이름이 없으면 체크 건너뜀 (안정성)
+        
+        const userName = decodeURIComponent(rawUserName);
         
         try {
-            // 서버의 /test 혹은 세션 확인 전용 API에 내 이름을 보냄
-            const response = await fetch(`${API_BASE_URL}/test?user=${userName}`);
+            const response = await fetch(`${API_BASE_URL}/test`);
             const data = await response.json();
 
-            // 서버 응답에 내 세션이 없거나 실패라면 로그아웃
             if (data.connection !== 1) {
-                forceLogout("서버 연결에 문제가 발생했습니다.");
+                // 서버가 꺼져있을 때만 실행
+                forceLogout("시스템 점검 중입니다.");
+                return;
             }
             
-            // 만약 서버에서 중복 로그인이나 강제 로그아웃을 구현했다면 
-            // 아래처럼 activeSessions에 내가 있는지 확인하는 로직이 필요합니다.
+            // [수정] 내 이름이 명단에 진짜로 없는지 대조
             if (data.activeSessions && !data.activeSessions.includes(userName)) {
+                console.log("세션 불일치 - 내 이름:", userName, "서버 명단:", data.activeSessions);
                 forceLogout("다른 기기에서 로그인했거나 관리자가 로그아웃시켰습니다.");
             }
 
         } catch (error) {
             console.error("세션 체크 중 에러:", error);
-            // 서버가 완전히 죽었을 때도 로그아웃 시킬지 결정 (보통은 유지하되 경고만 띄움)
         }
     }
 }
