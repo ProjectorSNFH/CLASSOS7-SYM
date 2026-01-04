@@ -189,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!adminLink) {
             const link = document.createElement('a');
             link.id = "adminPanelLink";
-            link.href = "/auth"; // 서버의 관리자 주소
+            link.href = "admin.html"; // 서버의 관리자 주소
             link.innerText = "관리자 패널";
-            link.style.color = "var(--accent-red)"; // 강조 색상 (선택)
+            link.style.color = "var(--text-color)"; // 강조 색상 (선택)
             
             // 로그아웃 버튼 앞에 삽입 (가장 첫 번째 자식으로)
             accDropdown.prepend(link);
