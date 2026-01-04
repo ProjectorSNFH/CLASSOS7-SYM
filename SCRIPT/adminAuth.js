@@ -21,7 +21,6 @@ function checkAdminAccess() {
     // 2. 검사 로직
     // 로그인이 안 되어 있거나, 역할이 학생('N')이면 차단
     if (!isLoggedIn || userRole === "N") {
-        alert("권한이 없습니다. 관리자만 접근 가능합니다.");
         window.location.replace("../HTML/dashboard.html");
     }
 }
