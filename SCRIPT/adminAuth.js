@@ -22,14 +22,7 @@ function checkAdminAccess() {
     // 로그인이 안 되어 있거나, 역할이 학생('N')이면 차단
     if (!isLoggedIn || userRole === "N") {
         alert("권한이 없습니다. 관리자만 접근 가능합니다.");
-        
-        // 경로 자동 계산
-        const path = window.location.pathname;
-        // 관리자 페이지가 루트에 있으면 'HTML/dashboard.html'로, 
-        // 관리자 페이지가 HTML 폴더 안에 있으면 'dashboard.html'로 리다이렉트
-        const target = path.includes('/HTML/') ? "dashboard.html" : "HTML/dashboard.html";
-        
-        window.location.replace(window.location.origin + "/" + target);
+        window.location.replace("../HTML/dashboard.html");
     }
 }
 
