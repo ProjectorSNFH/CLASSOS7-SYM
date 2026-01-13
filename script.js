@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // script.js (모든 페이지 공통)
-const API_BASE_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app";
+const API_BASE_URL = "https://classos-7-nx.vercel.app";
 
 // 쿠키에서 특정 값을 가져오는 함수
 function getCookie(name) {
