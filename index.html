@@ -212,7 +212,7 @@
                     document.cookie = `userName=${encodeURIComponent(result.user.name)}; ${expiresString} path=/; SameSite=None; Secure`;
                     document.cookie = `userRole=${result.user.role}; ${expiresString} path=/; SameSite=None; Secure`;
                     document.cookie = `userNumber=${result.user.number}; ${expiresString} path=/; SameSite=None; Secure`;
-                    window.location.replace("HTML/dashboard.html");
+                    window.location.replace("dashboard.html");
                 } else {
                     throw new Error(result.message || "아이디 또는 비밀번호가 틀렸습니다.");
                 }

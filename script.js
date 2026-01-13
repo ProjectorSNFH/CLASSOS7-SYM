@@ -62,7 +62,7 @@ function logout() {
   if (isLoginPage) {
     // 로그인 되어 있는데 로그인 페이지 오면 대시보드로
     if (isLoggedIn) {
-      location.href = "HTML/dashboard.html";
+      location.href = "dashboard.html";
     }
   } else {
     // 서비스 페이지인데 로그인 안 되어 있으면 index로
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!adminLink) {
             const link = document.createElement('a');
             link.id = "adminPanelLink";
-            link.href = "admin.html"; // 서버의 관리자 주소
+            link.href = "/Auth/admin.html"; // 서버의 관리자 주소
             link.innerText = "관리자 패널";
             link.style.color = "var(--text-color)"; // 강조 색상 (선택)
             
