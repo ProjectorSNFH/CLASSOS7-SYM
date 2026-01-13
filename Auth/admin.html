@@ -152,17 +152,17 @@
             const DataCard = document.getElementById('DataCard');
 
             if (userRole === 'A') {
-                DataCard.style.display = 'block';
-                DashCard.style.display = 'block';
-                BoardCard.style.display = 'block';
+                DataCard.disabled = false;
+                DashCard.disabled = false;
+                BoardCard.disabled = false;
             } else if (userRole === 'B') {
-                DataCard.style.display = 'none';
-                DashCard.style.display = 'none';
-                BoardCard.style.display = 'block';
+                DataCard.disabled = false;
+                DashCard.disabled = true;
+                BoardCard.disabled = true;
             } else if (userRole === 'D') {
-                DataCard.style.display = 'none';
-                DashCard.style.display = 'block';
-                BoardCard.style.display = 'none';
+                DataCard.disabled = true;
+                DashCard.disabled = false;
+                BoardCard.disabled = true;
             } else if (userRole === 'T') {
                 DataCard.style.display = 'block';
                 DashCard.style.display = 'none';
