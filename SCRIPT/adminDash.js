@@ -68,20 +68,3 @@ function saveDashboard() {
     alert("대시보드 설정이 성공적으로 저장되었습니다!");
     // window.location.href = "admin.html"; // 저장 후 복귀하고 싶을 때 활성화
 }
-
-function userRoleCheck() {
-
-    const getCookie = (name) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-    };
-    const userRole = getCookie("userRole"); // 'A', 'T', 'N'
-
-    if (!userRole === 'A' && !userRole === 'T') {
-        window.location.replace("../dashboard.html");
-    }
-}
-
-userRoleCheck();

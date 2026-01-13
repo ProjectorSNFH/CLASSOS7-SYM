@@ -153,20 +153,3 @@ function deleteSelected() {
 function alertFileNotice() {
     alert("파일은 수정할 수 없습니다. \n수정하려면 삭제 후 다시 업로드하세요.");
 }
-
-function userRoleCheck() {
-
-    const getCookie = (name) => {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-    };
-    const userRole = getCookie("userRole"); // 'A', 'T', 'N'
-
-    if (!userRole === 'A' && !userRole === 'D') {
-        window.location.replace("../dashboard.html");
-    }
-}
-
-userRoleCheck();
