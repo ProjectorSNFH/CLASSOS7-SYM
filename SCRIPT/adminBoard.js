@@ -133,7 +133,7 @@ function userRoleCheck() {
     };
     const userRole = getCookie("userRole"); // 'A', 'T', 'N'
 
-    if (!userRole === 'B' || !userRole === 'A') {
+    if (!userRole === 'B' && !userRole === 'A') {
         window.location.replace("../dashboard.html");
     }
 }
