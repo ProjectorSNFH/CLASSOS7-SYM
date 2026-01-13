@@ -106,17 +106,17 @@
         </header>
 
         <div class="admin-grid">
-            <a href="adminDash.html" class="admin-card">
+            <a href="adminDash.html" class="admin-card" id="DashCard">
                 <div class="admin-icon">📊</div>
                 <span>대시보드 수정</span>
                 <p>지각생, 청소 당번 관리</p>
             </a>
-            <a href="adminBoard.html" class="admin-card">
+            <a href="adminBoard.html" class="admin-card" id="BoardCard">
                 <div class="admin-icon">📋</div>
                 <span>수행평가 및 안내사항 수정</span>
                 <p>게시글 추가, 삭제, 마감 관리</p>
             </a>
-            <a href="adminData.html" class="admin-card">
+            <a href="adminData.html" class="admin-card" id="DataCard">
                 <div class="admin-icon">📂</div>
                 <span>데이터 센터 수정</span>
                 <p>파일 업로드 및 자료실 관리</p>
@@ -137,6 +137,45 @@
 
     <script src="../script.js"></script>
     <script src="../SCRIPT/adminAuth.js"></script>
+    <script>
+        function userCardCheck() {
+
+            const getCookie = (name) => {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+                return null;
+            };
+            const userRole = getCookie("userRole"); // 'A', 'T', 'N'
+            const BoardCard = document.getElementById('BoardCard');
+            const DashCard = document.getElementById('DashCard');
+            const DataCard = document.getElementById('DataCard');
+
+            if (userRole === 'A') {
+                DataCard.style.display = 'block';
+                DashCard.style.display = 'block';
+                BoardCard.style.display = 'block';
+            } else if (userRole === 'B') {
+                DataCard.style.display = 'none';
+                DashCard.style.display = 'none';
+                BoardCard.style.display = 'block';
+            } else if (userRole === 'D') {
+                DataCard.style.display = 'none';
+                DashCard.style.display = 'block';
+                BoardCard.style.display = 'none';
+            } else if (userRole === 'T') {
+                DataCard.style.display = 'block';
+                DashCard.style.display = 'none';
+                BoardCard.style.display = 'none';
+            } else {
+                DataCard.style.display = 'none';
+                DashCard.style.display = 'none';
+                BoardCard.style.display = 'none';
+            }
+        }
+
+        userCardCheck();
+    </script>
 </body>
 
 </html>
