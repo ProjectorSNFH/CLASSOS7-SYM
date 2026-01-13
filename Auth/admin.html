@@ -156,17 +156,17 @@
                 DashCard.disabled = false;
                 BoardCard.disabled = false;
             } else if (userRole === 'B') {
-                DataCard.disabled = false;
+                DataCard.disabled = true;
                 DashCard.disabled = true;
-                BoardCard.disabled = true;
+                BoardCard.disabled = false;
             } else if (userRole === 'D') {
                 DataCard.disabled = true;
                 DashCard.disabled = false;
                 BoardCard.disabled = true;
             } else if (userRole === 'T') {
-                DataCard.style.display = 'block';
-                DashCard.style.display = 'none';
-                BoardCard.style.display = 'none';
+                DataCard.disabled = false;
+                DashCard.disabled = true;
+                BoardCard.disabled = true;
             } else {
                 DataCard.style.display = 'none';
                 DashCard.style.display = 'none';
