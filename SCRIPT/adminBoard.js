@@ -122,3 +122,20 @@ function deleteSelected() {
         renderAdminBoard();
     }
 }
+
+function userRoleCheck() {
+
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    };
+    const userRole = getCookie("userRole"); // 'A', 'T', 'N'
+
+    if (!userRole === 'B' || !userRole === 'A') {
+        window.location.replace("../dashboard.html");
+    }
+}
+
+userRoleCheck();
