@@ -3,7 +3,7 @@ let searchQuery = "";
 let showCompleted = true;
 
 // [수정] 데이터 서버의 실제 Vercel 주소를 입력하세요.
-const DATA_SERVER_URL = "https://your-data-server.vercel.app"; 
+const DATA_SERVER_URL = "https://classos-7-nx.vercel.app"; 
 
 // [수정] 더미 데이터 삭제, 서버 데이터를 담을 빈 배열로 초기화
 let boardData = [];
