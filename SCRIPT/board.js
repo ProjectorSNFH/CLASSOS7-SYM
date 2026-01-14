@@ -126,6 +126,7 @@ function sortData(column, isInitial = false) {
     renderBoard();
 }
 
+
 function updateSortUI() {
     const titleBtn = document.getElementById('sort-title-btn');
     const dateBtn = document.getElementById('sort-date-btn');
