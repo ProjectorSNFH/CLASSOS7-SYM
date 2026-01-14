@@ -1,5 +1,5 @@
 // [설정] 데이터 서버의 배포 주소를 입력하세요.
-const DATA_SERVER_URL = "https://your-data-server.vercel.app"; 
+const DATA_SERVER_URL = "https://classos7-dx.vercel.app"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const roleMap = { 'A': '관리자', 'T': '대시보드 관리', 'N': '학생', 'D': '데이터센터 관리', 'B': '게시판 관리' };
