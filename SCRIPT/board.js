@@ -2,34 +2,56 @@ let currentSort = { column: 'date', ascending: true };
 let searchQuery = "";
 let showCompleted = true;
 
-// 더미 데이터 (이미 지난 날짜 포함)
-const boardData = [
-    { id: 1, title: "수학: 미분과 적분 단원평가", date: "2026-05-15", category: "수행" },
-    { id: 2, title: "영어: 영미문학 에세이 제출", date: "2026-05-20", category: "과제" },
-    { id: 3, title: "과학: 화학 반응 실험 보고서", date: "2026-05-10", category: "수행" }, // 마감됨
-    { id: 4, title: "국어: 현대시 분석 발표", date: "2025-01-25", category: "발표" },
-    { id: 5, title: "체육: 배드민턴 실기 테스트", date: "2026-04-18", category: "수행" }  // 마감됨
-];
+// 1. 더미 데이터 삭제 후 서버 데이터를 담을 변수 선언
+let boardData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // 이벤트 리스너 등록
     const searchInput = document.getElementById('searchInput');
     const completedCheckbox = document.getElementById('showCompleted');
 
-    searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value.toLowerCase();
-        renderBoard();
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderBoard();
+        });
+    }
 
-    completedCheckbox.addEventListener('change', (e) => {
-        showCompleted = e.target.checked;
-        renderBoard();
-    });
+    if (completedCheckbox) {
+        completedCheckbox.addEventListener('change', (e) => {
+            showCompleted = e.target.checked;
+            renderBoard();
+        });
+    }
 
-    sortData(currentSort.column, true);
+    // 2. 초기 로딩 시 서버에서 데이터를 가져옵니다.
+    fetchBoardData();
 });
 
+// 3. 서버 데이터 로딩 함수 추가
+async function fetchBoardData() {
+    try {
+        // Vercel의 import 엔드포인트 호출
+        const response = await fetch('/api/auth/import?target=board');
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        boardData = data; // 성공 시 데이터 할당
+    } catch (error) {
+        console.error("데이터 로딩 실패:", error);
+        // 4. 실패 시 "불러오기 실패" 데이터 생성
+        boardData = [
+            { id: 0, title: "불러오기 실패", date: "0000-00-00", category: "오류" }
+        ];
+    } finally {
+        // 로딩 완료 후 정렬 및 렌더링
+        sortData(currentSort.column, true);
+    }
+}
+
 function calculateDDay(targetDate) {
+    if (targetDate === "0000-00-00") return 0; // 로딩 실패 시 예외 처리
     const today = new Date();
     today.setHours(0,0,0,0);
     const target = new Date(targetDate);
@@ -39,6 +61,8 @@ function calculateDDay(targetDate) {
 
 function renderBoard() {
     const container = document.getElementById('board-list-container');
+    if (!container) return;
+
     const today = new Date();
     today.setHours(0,0,0,0);
 
@@ -52,10 +76,10 @@ function renderBoard() {
     container.innerHTML = filteredData.map(item => {
         const dDayCount = calculateDDay(item.date);
         const isPast = dDayCount < 0;
-        const dDayText = dDayCount === 0 ? "D-Day" : (dDayCount > 0 ? `D-${dDayCount}` : `D+${Math.abs(dDayCount)}`);
+        const dDayText = item.id === 0 ? "-" : (dDayCount === 0 ? "D-Day" : (dDayCount > 0 ? `D-${dDayCount}` : `D+${Math.abs(dDayCount)}`));
         
         // 날짜 포맷 (MM/DD)
-        const dateText = item.date.split('-').slice(1).join('/');
+        const dateText = item.date === "0000-00-00" ? "--/--" : item.date.split('-').slice(1).join('/');
 
         return `
             <div class="board-item ${isPast ? 'completed' : ''}">
@@ -74,12 +98,12 @@ function renderBoard() {
         `;
     }).join('');
 
-    if (filteredData.length === 0) {
+    if (filteredData.length === 0 && boardData.length !== 0) {
         container.innerHTML = `<div style="text-align:center; padding: 40px; color: #666;">검색 결과가 없습니다.</div>`;
     }
 }
 
-// 정렬 함수 (기존과 동일)
+// 정렬 함수
 function sortData(column, isInitial = false) {
     if (!isInitial) {
         if (currentSort.column === column) {
@@ -96,7 +120,7 @@ function sortData(column, isInitial = false) {
         return currentSort.ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
     });
 
-    updateSortUI(); // 아이콘과 버튼 스타일을 한꺼번에 업데이트
+    updateSortUI();
     renderBoard();
 }
 
@@ -106,18 +130,18 @@ function updateSortUI() {
     const titleIcon = document.getElementById('sort-title-icon');
     const dateIcon = document.getElementById('sort-date-icon');
 
-    // 1. 클래스 초기화
+    if (!titleBtn || !dateBtn) return;
+
     titleBtn.classList.remove('active-sort');
     dateBtn.classList.remove('active-sort');
-    titleIcon.innerText = '↕';
-    dateIcon.innerText = '↕';
+    if (titleIcon) titleIcon.innerText = '↕';
+    if (dateIcon) dateIcon.innerText = '↕';
 
-    // 2. 현재 활성화된 버튼에 스타일 및 아이콘 적용
     if (currentSort.column === 'title') {
         titleBtn.classList.add('active-sort');
-        titleIcon.innerText = currentSort.ascending ? '↑' : '↓';
+        if (titleIcon) titleIcon.innerText = currentSort.ascending ? '↑' : '↓';
     } else if (currentSort.column === 'date') {
         dateBtn.classList.add('active-sort');
-        dateIcon.innerText = currentSort.ascending ? '↑' : '↓';
+        if (dateIcon) dateIcon.innerText = currentSort.ascending ? '↑' : '↓';
     }
 }
