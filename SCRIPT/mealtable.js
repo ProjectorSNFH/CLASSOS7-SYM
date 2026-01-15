@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // 급식 데이터 호출 및 렌더링
-    fetchMeal(formatDate(today), 'today-meal');
+    fetchMeal('2025-05-06', 'today-meal');
     fetchMeal(formatDate(tomorrow), 'tomorrow-meal');
 });
 
