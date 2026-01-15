@@ -4,9 +4,9 @@
 
 // [설정] 본인 학교의 정보를 입력하세요. (나이스 오픈 API에서 확인 가능)
 const MEAL_CONFIG = {
-    KEY: 'YOUR_NEIS_API_KEY', // 나이스 API 키가 없다면 공백으로 두어도 동작은 하나 제한이 있을 수 있음
+    KEY: '3e6d5694278b47e9bfda49232ab2b50b', // 나이스 API 키가 없다면 공백으로 두어도 동작은 하나 제한이 있을 수 있음
     ATPT_OFCDC_SC_CODE: 'B10', // 시도교육청코드 (예: 서울 B10, 경기 J10)
-    SD_SCHUL_CODE: '7011489',   // 행정표준기관코드 (7자리 숫자)
+    SD_SCHUL_CODE: '7041180',   // 행정표준기관코드 (7자리 숫자)
 };
 
 document.addEventListener('DOMContentLoaded', () => {
