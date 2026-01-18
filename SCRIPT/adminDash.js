@@ -57,31 +57,43 @@ async function fetchCurrentAdminData(loadTimeout) {
         if (!response.ok) throw new Error('서버 로드 실패');
         
         const data = await response.json();
+        
+        // [수정] 데이터가 도착하면 즉시 타임아웃부터 해제
         clearTimeout(loadTimeout);
 
-        // 지각생 입력창 세팅
+        // 1. 지각생 세팅
         document.getElementById('lateInput').value = data.latecomers || "";
 
-        // 청소 당번 세팅 (정규식으로 숫자만 추출)
+        // 2. 청소 당번 세팅 (더 안전한 파싱)
         const rawCleaning = data.cleaning || "";
-        const nums = rawCleaning.match(/\d+/g) || ["01", "01", "01", "01"];
-        const pNums = nums.map(n => n.length === 1 ? n.padStart(2, '0') : n);
+        // 숫자가 4개가 안 될 경우를 대비해 기본값 ["01", "01", "01", "01"] 준비
+        const nums = rawCleaning.match(/\d+/g) || [];
+        const pNums = ["01", "01", "01", "01"]; // 기본값
+        
+        nums.forEach((n, idx) => {
+            if (idx < 4) pNums[idx] = n.length === 1 ? n.padStart(2, '0') : n;
+        });
 
-        document.getElementById('sweep1').value = pNums[0] || "01";
-        document.getElementById('sweep2').value = pNums[1] || "01";
-        document.getElementById('mop1').value = pNums[2] || "01";
-        document.getElementById('mop2').value = pNums[3] || "01";
+        // 요소가 존재하는지 확인 후 세팅 (오타 방지)
+        if(document.getElementById('sweep1')) document.getElementById('sweep1').value = pNums[0];
+        if(document.getElementById('sweep2')) document.getElementById('sweep2').value = pNums[1];
+        if(document.getElementById('mop1')) document.getElementById('mop2').value = pNums[2] || "01"; // 오타 방지용
+        if(document.getElementById('mop2')) document.getElementById('mop2').value = pNums[3];
 
-        // 로딩 완료 후 오버레이 제거
+        // 3. [중요] 모든 데이터 세팅이 끝난 후 오버레이 제거
         if (overlay) {
             overlay.style.opacity = '0';
-            setTimeout(() => overlay.style.display = 'none', 500);
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                overlay.classList.remove('loading-failed'); // 혹시 모를 클래스 잔상 제거
+            }, 500);
         }
     } catch (err) {
         clearTimeout(loadTimeout);
-        console.error(err);
+        console.error("화면 렌더링 중 에러 발생:", err); // 에러 원인을 콘솔에 찍어보세요
+        
         if (overlay) {
-            document.getElementById('loading-text').innerText = "FAILED TO LOAD CURRENT DATA";
+            document.getElementById('loading-text').innerText = "DATA RENDER ERROR: " + err.message;
             overlay.classList.add('loading-failed');
         }
     }
