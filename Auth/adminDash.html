@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>대시보드 관리 - CLASS(OS) 7</title>
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="../CSS/admin.css"> <style>
-         .admin-section {
+    <link rel="stylesheet" href="../CSS/admin.css">
+    <style>
+        .admin-section {
             margin-bottom: 30px;
         }
 
@@ -109,6 +111,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="dot-overlay"></div>
 
@@ -137,13 +140,36 @@
             <p>지각생 및 청소 당번 정보를 업데이트합니다.</p>
         </header>
 
+
+
+        <div class="admin-section">
+            <label class="input-label">청소 당번 지정</label>
+            <div class="duty-edit-grid">
+                <div class="duty-group">
+                    <p style="font-size: 0.9rem; margin-bottom: 5px;">🧹 쓸기</p>
+                    <div class="select-wrapper">
+                        <select id="sweep1"></select>
+                        <select id="sweep2"></select>
+                    </div>
+                </div>
+                <div class="duty-group">
+                    <p style="font-size: 0.9rem; margin-bottom: 5px;">🧽 닦기</p>
+                    <div class="select-wrapper">
+                        <select id="mop1"></select>
+                        <select id="mop2"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <section class="section-card">
             <button class="save-btn" id="saveBtn" onclick="saveDashboard()">설정 저장하기</button>
         </section>
     </main>
 
     <script src="../script.js"></script>
-    <script src="../SCRIPT/adminAuth.js"></script> 
+    <script src="../SCRIPT/adminAuth.js"></script>
     <script src="../SCRIPT/adminDash.js"></script>
 </body>
+
 </html>
