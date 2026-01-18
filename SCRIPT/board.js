@@ -1,12 +1,9 @@
 let currentSort = { column: 'date', ascending: true };
 let searchQuery = "";
 let showCompleted = true;
-
-// [수정] 데이터 서버의 실제 Vercel 주소를 입력하세요.
-const DATA_SERVER_URL = "https://classos7-dx.vercel.app"; 
-
-// [수정] 더미 데이터 삭제, 서버 데이터를 담을 빈 배열로 초기화
 let boardData = [];
+
+const DATA_SERVER_URL = "https://classos7-dx.vercel.app"; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
@@ -26,29 +23,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // [추가] 페이지 로드 시 서버에서 데이터를 가져옵니다.
-    fetchBoardData();
+    // [추가] 1분 타임아웃 설정
+    const loadTimeout = setTimeout(() => {
+        const overlay = document.getElementById('loading-overlay');
+        const text = document.getElementById('loading-text');
+        if (overlay && overlay.style.display !== 'none') {
+            overlay.classList.add('loading-failed');
+            if (text) text.innerText = "LOADING FAILED: SERVER TIMEOUT (1m)";
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            }, 3000);
+        }
+    }, 60000);
+
+    fetchBoardData(loadTimeout);
 });
 
-// [추가] 서버에서 데이터를 가져오는 함수
-async function fetchBoardData() {
+async function fetchBoardData(loadTimeout) {
+    const overlay = document.getElementById('loading-overlay');
     try {
-        // [중요] 외부 서버이므로 전체 주소를 사용합니다.
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/import?target=board`);
-        
         if (!response.ok) throw new Error('서버 응답 오류');
         
         const data = await response.json();
         boardData = data;
+        
+        clearTimeout(loadTimeout); // 성공 시 타임아웃 취소
     } catch (error) {
+        clearTimeout(loadTimeout);
         console.error("데이터 로딩 실패:", error);
-        // [요청사항] 실패 시 표시할 에러 데이터 생성
-        boardData = [
-            { id: 0, title: "불러오기 실패", date: "0000-00-00", category: "오류" }
-        ];
+        boardData = [{ id: 0, title: "불러오기 실패", date: "0000-00-00", category: "오류" }];
+        
+        const text = document.getElementById('loading-text');
+        if (overlay) {
+            overlay.classList.add('loading-failed');
+            if (text) text.innerText = "LOADING FAILED: DATA SERVER ERROR";
+        }
     } finally {
-        // 로딩 완료(또는 실패) 후 정렬 및 화면 렌더링
         sortData(currentSort.column, true);
+        
+        // 로딩 화면 제거
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 500);
+        }
     }
 }
 
@@ -78,8 +97,6 @@ function renderBoard() {
     container.innerHTML = filteredData.map(item => {
         const dDayCount = calculateDDay(item.date);
         const isPast = dDayCount < 0;
-        
-        // [수정] 실패 데이터(id:0)인 경우 D-Day 텍스트 처리
         const dDayText = item.id === 0 ? "-" : (dDayCount === 0 ? "D-Day" : (dDayCount > 0 ? `D-${dDayCount}` : `D+${Math.abs(dDayCount)}`));
         const dateText = item.date === "0000-00-00" ? "--/--" : item.date.split('-').slice(1).join('/');
 
@@ -105,7 +122,6 @@ function renderBoard() {
     }
 }
 
-// 정렬 및 UI 업데이트 함수 (기존 로직 유지)
 function sortData(column, isInitial = false) {
     if (!isInitial) {
         if (currentSort.column === column) {
@@ -115,24 +131,20 @@ function sortData(column, isInitial = false) {
             currentSort.ascending = true;
         }
     }
-
     boardData.sort((a, b) => {
         let valA = a[column];
         let valB = b[column];
         return currentSort.ascending ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
     });
-
     updateSortUI();
     renderBoard();
 }
-
 
 function updateSortUI() {
     const titleBtn = document.getElementById('sort-title-btn');
     const dateBtn = document.getElementById('sort-date-btn');
     const titleIcon = document.getElementById('sort-title-icon');
     const dateIcon = document.getElementById('sort-date-icon');
-
     if (!titleBtn || !dateBtn) return;
 
     titleBtn.classList.remove('active-sort');

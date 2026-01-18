@@ -2,18 +2,13 @@
 /* 데이터 센터 로직                                                            */
 /* -------------------------------------------------------------------------- */
 
-// 1. 초기 정렬 및 검색 상태 설정
 let currentSort = { column: 'date', ascending: false };
 let searchQuery = ""; 
-
-// [수정] 더미 데이터 삭제 후 서버 데이터를 담을 빈 배열 선언
 let fileData = [];
 
-// [설정] 데이터 서버의 실제 배포 주소를 입력하세요.
 const DATA_SERVER_URL = "https://classos7-dx.vercel.app"; 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 검색창 이벤트 리스너 등록
     const searchInput = document.getElementById('searchInput');
     if(searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -22,43 +17,55 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // [추가] 페이지 로드 시 서버에서 데이터를 가져옵니다.
-    fetchFileData();
+    // [추가] 1분 타임아웃 설정
+    const loadTimeout = setTimeout(() => {
+        const overlay = document.getElementById('loading-overlay');
+        const text = document.getElementById('loading-text');
+        if (overlay && overlay.style.display !== 'none') {
+            overlay.classList.add('loading-failed');
+            if (text) text.innerText = "LOADING FAILED: SERVER TIMEOUT (1m)";
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            }, 3000);
+        }
+    }, 60000);
+
+    fetchFileData(loadTimeout);
 });
 
-/* -------------------------------------------------------------------------- */
-/* 서버 데이터 호출 함수                                                         */
-/* -------------------------------------------------------------------------- */
-
-async function fetchFileData() {
+async function fetchFileData(loadTimeout) {
+    const overlay = document.getElementById('loading-overlay');
     try {
-        // Vercel 서버의 datacenter 타겟 호출
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/import?target=datacenter`);
-        
         if (!response.ok) throw new Error('Network response was not ok');
         
         const data = await response.json();
-        fileData = data; // 성공 시 데이터 할당
+        fileData = data;
+        
+        clearTimeout(loadTimeout); // 성공 시 타임아웃 취소
     } catch (error) {
+        clearTimeout(loadTimeout);
         console.error("데이터 로딩 실패:", error);
-        // [요청사항] 실패 시 제목에 "불러오기 실패"가 포함된 빈 데이터 하나 생성
         fileData = [{ 
-            id: 0, 
-            uploader: "", 
-            title: "불러오기 실패", 
-            fileName: "", 
-            fileLink: "#", 
-            date: "----.--.--" 
+            id: 0, uploader: "", title: "불러오기 실패", fileName: "", fileLink: "#", date: "----.--.--" 
         }];
+        
+        const text = document.getElementById('loading-text');
+        if (overlay) {
+            overlay.classList.add('loading-failed');
+            if (text) text.innerText = "LOADING FAILED: DATA SERVER ERROR";
+        }
     } finally {
-        // 로딩 완료 후 초기 정렬 적용 및 렌더링
         sortData(currentSort.column, true);
+        
+        // 로딩 화면 제거
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 500);
+        }
     }
 }
-
-/* -------------------------------------------------------------------------- */
-/* 정렬 및 렌더링 함수                                                          */
-/* -------------------------------------------------------------------------- */
 
 function sortData(column, isInitial = false) {
     if (!isInitial) {
@@ -71,9 +78,8 @@ function sortData(column, isInitial = false) {
     }
 
     fileData.sort((a, b) => {
-        let valA = a[column] || ""; // 값이 없을 경우 빈 문자열 처리
+        let valA = a[column] || "";
         let valB = b[column] || "";
-
         if (valA < valB) return currentSort.ascending ? -1 : 1;
         if (valA > valB) return currentSort.ascending ? 1 : -1;
         return 0;
@@ -91,19 +97,14 @@ function updateSortUI() {
     };
 
     document.querySelectorAll('.sort-controls button').forEach(btn => btn.classList.remove('active-sort'));
-
-    for (const key in icons) {
-        if (icons[key]) icons[key].innerText = '↕';
-    }
+    for (const key in icons) { if (icons[key]) icons[key].innerText = '↕'; }
 
     const currentBtn = document.querySelector(`button[onclick="sortData('${currentSort.column}')"]`);
     if (currentBtn) {
         currentBtn.classList.add('active-sort');
         const iconId = `sort-${currentSort.column}-icon`;
         const iconEl = document.getElementById(iconId);
-        if (iconEl) {
-            iconEl.innerText = currentSort.ascending ? '↑' : '↓';
-        }
+        if (iconEl) iconEl.innerText = currentSort.ascending ? '↑' : '↓';
     }
 }
 
@@ -128,18 +129,11 @@ function renderFileList() {
                 <span class="col-uploader">${item.uploader}</span>
                 <span class="col-date">${item.date.replaceAll('-', '.')}</span>
             </div>
-
             <div class="col-uploader desktop-only">${item.uploader}</div>
-            
             <div class="col-content">
                 <span class="content-title">${item.title}</span>
-                ${item.fileName ? `
-                    <a href="${item.fileLink}" target="_blank" class="file-link" download>
-                        ${item.fileName}
-                    </a>
-                ` : ''}
+                ${item.fileName ? `<a href="${item.fileLink}" target="_blank" class="file-link" download>${item.fileName}</a>` : ''}
             </div>
-            
             <div class="col-date desktop-only">${item.date.replaceAll('-', '.')}</div>
         </div>
     `).join('');
