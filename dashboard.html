@@ -22,7 +22,7 @@
         <div class="nav-center">
             <a href="dashboard.html" class="active">대시보드</a>
             <a href="board.html">수행평가 및 안내사항</a>
-            <a href="datacenter.html" >데이터 센터</a>
+            <a href="datacenter.html">데이터 센터</a>
         </div>
 
         <div class="mobile-menu-container" style="display: none;">
@@ -50,60 +50,69 @@
         </div>
     </div>
 
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-text">CONNECTING TO DATA SERVER...</p>
+    </div>
+
     <main class="main-container">
-        <section class="section-card profile-card">
-            <img src="../assets/account.png" alt="Profile" class="profile-img">
-            <div class="profile-info">
-                <h2 id="display-name">불러오는 중입니다...</h2>
-                <p id="display-meta">불러오는 중입니다...</p>
+
+        <main class="main-container">
+            <section class="section-card profile-card">
+                <img src="../assets/account.png" alt="Profile" class="profile-img">
+                <div class="profile-info">
+                    <h2 id="display-name">불러오는 중입니다...</h2>
+                    <p id="display-meta">불러오는 중입니다...</p>
+                </div>
+            </section>
+
+            <div class="dashboard-grid">
+                <section class="section-card">
+                    <div class="widget-title">지각한 사람</div>
+                    <div class="data-value" id="late-list">
+                    </div>
+                </section>
+
+                <section class="section-card">
+                    <div class="widget-title">청소 당번</div>
+                    <div id="duty-container" style="display: flex; gap: 20px;" class="duty-container">
+                    </div>
+                </section>
+
+                <section class="section-card" style="grid-column: span 2; ">
+                    <div class="widget-title">수행평가 및 안내사항</div>
+                    <div id="notice-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+                </section>
+
+                <section class="section-card meal-widget" style="grid-column: span 2; ">
+                    <div class="widget-title">오늘의 급식</div>
+                    <div id="today-meal" class="meal-list">데이터를 불러오는 중...</div>
+                </section>
+
+                <section class="section-card meal-widget" style="grid-column: span 2; ">
+                    <div class="widget-title">내일의 급식</div>
+                    <div id="tomorrow-meal" class="meal-list">데이터를 불러오는 중...</div>
+                </section>
             </div>
-        </section>
+        </main>
 
-        <div class="dashboard-grid">
-            <section class="section-card">
-                <div class="widget-title">지각한 사람</div>
-                <div class="data-value" id="late-list">
-                </div>
-            </section>
+        <footer>
+            <button class="mode-toggle" onclick="toggleTheme()">
+                <img src="assets/vmode.png" alt="Toggle Mode">
+                <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">다크/라이트 모드</span>
+            </button>
+            <button class="mode-toggle" id="seasonalModeBtn" onclick="toggleSeasonalMode()">
+                <img src="assets/smode.png" alt="Toggle Mode">
+                <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">스노우 모드</span>
+            </button>
+        </footer>
 
-            <section class="section-card">
-                <div class="widget-title">청소 당번</div>
-                <div id="duty-container" style="display: flex; gap: 20px;" class="duty-container">
-                </div>
-            </section>
-
-            <section class="section-card" style="grid-column: span 2; ">
-                <div class="widget-title">수행평가 및 안내사항</div>
-                <div id="notice-list" style="display: flex; flex-direction: column; gap: 10px;">
-                </div>
-            </section>
-
-            <section class="section-card meal-widget" style="grid-column: span 2; ">
-                <div class="widget-title">오늘의 급식</div>
-                <div id="today-meal" class="meal-list">데이터를 불러오는 중...</div>
-            </section>
-
-            <section class="section-card meal-widget" style="grid-column: span 2; ">
-                <div class="widget-title">내일의 급식</div>
-                <div id="tomorrow-meal" class="meal-list">데이터를 불러오는 중...</div>
-            </section>
-        </div>
-    </main>
-
-    <footer>
-        <button class="mode-toggle" onclick="toggleTheme()">
-            <img src="assets/vmode.png" alt="Toggle Mode">
-            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">다크/라이트 모드</span>
-        </button>
-        <button class="mode-toggle" id="seasonalModeBtn" onclick="toggleSeasonalMode()">
-            <img src="assets/smode.png" alt="Toggle Mode">
-            <span style="font-size: 0.8rem; font-family: 'JetBrains Mono';">스노우 모드</span>
-        </button>
-    </footer>
-
-    <script src="script.js"></script>
-    <script src="SCRIPT/dashboard.js"></script>
-    <script src="SCRIPT/mealtable.js"></script>
+        <script src="script.js"></script>
+        <script src="SCRIPT/dashboard.js"></script>
+        <script src="SCRIPT/mealtable.js"></script>
 </body>
 
 </html>
