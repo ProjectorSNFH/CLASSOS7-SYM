@@ -114,52 +114,6 @@
     margin-bottom: 2px;
 }
 
-/* 로딩 오버레이 스타일 */
-#loading-overlay {
-    position: fixed;
-    top: 72px; /* 네비게이션 바 아래부터 시작 */
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 72px);
-    background: var(--bg-color); /* 기존 배경색 유지 */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* 네비게이션(2000)보다 낮게 설정 */
-    transition: opacity 0.5s ease;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border-color);
-    border-top: 3px solid var(--text-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-#loading-text {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
-    color: var(--text-color);
-    letter-spacing: 1px;
-}
-
-.loading-failed #loading-text {
-    color: var(--accent-red);
-}
-
-.loading-failed .spinner {
-    display: none; /* 실패 시 스피너 숨김 */
-}
-
 @media (max-width: 480px) {
 
     /* iPhone SE 등 아주 작은 화면에서는 구분선을 없애고 위아래 간격 추가 */
