@@ -77,7 +77,7 @@ async function fetchCurrentAdminData(loadTimeout) {
         // 요소가 존재하는지 확인 후 세팅 (오타 방지)
         if(document.getElementById('sweep1')) document.getElementById('sweep1').value = pNums[0];
         if(document.getElementById('sweep2')) document.getElementById('sweep2').value = pNums[1];
-        if(document.getElementById('mop1')) document.getElementById('mop2').value = pNums[2] || "01"; // 오타 방지용
+        if(document.getElementById('mop1')) document.getElementById('mop1').value = pNums[2] || "01"; // 오타 방지용
         if(document.getElementById('mop2')) document.getElementById('mop2').value = pNums[3];
 
         // 3. [중요] 모든 데이터 세팅이 끝난 후 오버레이 제거
