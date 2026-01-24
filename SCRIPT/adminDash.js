@@ -114,10 +114,10 @@ async function fetchDashboardData() {
 async function saveDashboard() {
     const saveBtn = document.querySelector('.save-btn');
     const lateInput = document.getElementById('lateInput');
-    
+
     // [수정] 쿠키에서 권한(userRole)을 명시적으로 가져옵니다.
-    const userRole = getCookie('userRole'); 
-    
+    const userRole = getCookie('userRole');
+
     // 디버깅: 브라우저 콘솔에서 권한이 찍히는지 확인 (테스트용)
     console.log("보낼 권한:", userRole);
 
@@ -141,12 +141,12 @@ async function saveDashboard() {
     }
 
     try {
+        // adminDash.js 의 saveDashboard 함수 내부 fetch 부분
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // [중요] x-user-role 헤더에 쿠키에서 가져온 값을 담습니다.
-                'x-user-role': userRole 
+                'x-user-role': getCookie('userRole') // 이 부분이 비어있어서 아까 권한없음이 뜬 겁니다!
             },
             body: JSON.stringify({
                 target: 'dashboard',
