@@ -115,38 +115,30 @@ async function saveDashboard() {
     const saveBtn = document.querySelector('.save-btn');
     const lateInput = document.getElementById('lateInput');
 
-    // [수정] 쿠키에서 권한(userRole)을 명시적으로 가져옵니다.
-    const userRole = getCookie('userRole');
-
-    // 디버깅: 브라우저 콘솔에서 권한이 찍히는지 확인 (테스트용)
-    console.log("보낼 권한:", userRole);
-
-    if (!userRole) {
-        alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
-        return;
-    }
-
+    // 현재 입력값 및 선택값 수집
     const lateRaw = lateInput ? lateInput.value : "";
     const s1 = document.getElementById('sweep1').value;
     const s2 = document.getElementById('sweep2').value;
     const m1 = document.getElementById('mop1').value;
     const m2 = document.getElementById('mop2').value;
+
+    // 서버 저장 형식에 맞게 문자열 조립
     const cleaningStr = `${s1}, ${s2} / ${m1}, ${m2}`;
 
     if (!confirm("변경사항을 저장하시겠습니까?")) return;
 
+    // 저장 버튼 비활성화
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerText = "저장 중...";
     }
 
     try {
-        // adminDash.js 의 saveDashboard 함수 내부 fetch 부분
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-user-role': getCookie('userRole') // 이 부분이 비어있어서 아까 권한없음이 뜬 겁니다!
+                'x-user-role': userRole // 서버로 내 권한 정보를 보냄
             },
             body: JSON.stringify({
                 target: 'dashboard',
