@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 2. UI 초기화 및 데이터 서버로부터 데이터 호출
-    initSelectBoxes();       
-    fetchDashboardData();    
+    initSelectBoxes();
+    fetchDashboardData();
 });
 
 /**
@@ -37,7 +37,7 @@ function initSelectBoxes() {
         loadingOpt.textContent = "로딩중..";
         loadingOpt.value = "";
         el.appendChild(loadingOpt);
-        
+
         // 1번부터 30번까지 옵션 생성
         for (let i = 1; i <= 30; i++) {
             const num = i < 10 ? `0${i}` : `${i}`;
@@ -54,7 +54,7 @@ function initSelectBoxes() {
  */
 async function fetchDashboardData() {
     const lateInput = document.getElementById('lateInput');
-    
+
     // 로딩 시작 상태 표시
     if (lateInput) {
         lateInput.value = "데이터를 서버에서 불러오는 중입니다...";
@@ -64,7 +64,7 @@ async function fetchDashboardData() {
     try {
         // 데이터 서버의 import.js 호출
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/import?target=dashboard`);
-        
+
         if (!response.ok) {
             throw new Error(`서버 응답 오류 (상태코드: ${response.status})`);
         }
@@ -82,7 +82,7 @@ async function fetchDashboardData() {
         const rawCleaning = data.cleaning || "";
         // 문자열에서 숫자(01, 02 등)만 추출
         const nums = rawCleaning.match(/\d+/g) || [];
-        
+
         // 데이터가 부족할 경우를 대비해 4개의 기본값 준비
         const pNums = ["01", "01", "01", "01"];
         nums.forEach((n, idx) => {
@@ -95,8 +95,8 @@ async function fetchDashboardData() {
         // 각각의 셀렉트 박스 요소에 값 할당
         if (document.getElementById('sweep1')) document.getElementById('sweep1').value = pNums[0];
         if (document.getElementById('sweep2')) document.getElementById('sweep2').value = pNums[1];
-        if (document.getElementById('mop1'))   document.getElementById('mop1').value = pNums[2];
-        if (document.getElementById('mop2'))   document.getElementById('mop2').value = pNums[3];
+        if (document.getElementById('mop1')) document.getElementById('mop1').value = pNums[2];
+        if (document.getElementById('mop2')) document.getElementById('mop2').value = pNums[3];
 
     } catch (error) {
         console.error("데이터 로드 중 에러 발생:", error);
@@ -115,30 +115,38 @@ async function saveDashboard() {
     const saveBtn = document.querySelector('.save-btn');
     const lateInput = document.getElementById('lateInput');
     
-    // 현재 입력값 및 선택값 수집
+    // [수정] 쿠키에서 권한(userRole)을 명시적으로 가져옵니다.
+    const userRole = getCookie('userRole'); 
+    
+    // 디버깅: 브라우저 콘솔에서 권한이 찍히는지 확인 (테스트용)
+    console.log("보낼 권한:", userRole);
+
+    if (!userRole) {
+        alert("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+        return;
+    }
+
     const lateRaw = lateInput ? lateInput.value : "";
     const s1 = document.getElementById('sweep1').value;
     const s2 = document.getElementById('sweep2').value;
     const m1 = document.getElementById('mop1').value;
     const m2 = document.getElementById('mop2').value;
-    
-    // 서버 저장 형식에 맞게 문자열 조립
     const cleaningStr = `${s1}, ${s2} / ${m1}, ${m2}`;
 
     if (!confirm("변경사항을 저장하시겠습니까?")) return;
 
-    // 저장 버튼 비활성화
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerText = "저장 중...";
     }
 
     try {
-        // 데이터 서버의 write.js 호출
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json' 
+            headers: {
+                'Content-Type': 'application/json',
+                // [중요] x-user-role 헤더에 쿠키에서 가져온 값을 담습니다.
+                'x-user-role': userRole 
             },
             body: JSON.stringify({
                 target: 'dashboard',
