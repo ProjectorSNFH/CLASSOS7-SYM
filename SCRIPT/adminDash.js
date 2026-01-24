@@ -114,6 +114,7 @@ async function fetchDashboardData() {
 async function saveDashboard() {
     const saveBtn = document.querySelector('.save-btn');
     const lateInput = document.getElementById('lateInput');
+    const userRole = getCookie('userRole');
 
     // 현재 입력값 및 선택값 수집
     const lateRaw = lateInput ? lateInput.value : "";
@@ -134,11 +135,12 @@ async function saveDashboard() {
     }
 
     try {
+        // adminDash.js 의 saveDashboard 함수 내부 fetch 부분
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-user-role': userRole // 서버로 내 권한 정보를 보냄
+                'x-user-role': getCookie('userRole') // 이 부분이 비어있어서 아까 권한없음이 뜬 겁니다!
             },
             body: JSON.stringify({
                 target: 'dashboard',
