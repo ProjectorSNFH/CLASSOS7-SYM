@@ -117,40 +117,35 @@ async function saveDashboard() {
     const userRole = getCookie('userRole');
 
     if (!confirm("변경사항을 저장하시겠습니까?")) return;
-
     if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "검증 중..."; }
 
     try {
-        // [1단계] middleware에 키값 요청
+        // [1단계] 토큰 생성
         const tokenRes = await fetch(`${DATA_SERVER_URL}/api/auth/verify`, {
             headers: { 'x-user-role': userRole }
         });
         const { token } = await tokenRes.json();
 
-        if (token === "none") {
-            alert("액세스 권한이 부족하여 처리 실패함");
-            return;
-        }
+        if (token === "none") throw new Error("액세스 권한 부족");
 
-        // [2단계] 받은 키값과 함께 write 요청
+        // [2단계] 데이터 전송 (구조 수정됨)
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-user-role': userRole },
             body: JSON.stringify({
                 target: 'dashboard',
-                latecomers: lateInput.value,
-                cleaning: `${document.getElementById('sweep1').value}, ${document.getElementById('sweep2').value} / ${document.getElementById('mop1').value}, ${document.getElementById('mop2').value}`,
-                token: token // 토큰 동봉
+                token: token,
+                // [수정] data 라는 키값 안에 객체로 묶어 전송해야 함
+                data: {
+                    latecomers: lateInput.value,
+                    cleaning: `${document.getElementById('sweep1').value}, ${document.getElementById('sweep2').value} / ${document.getElementById('mop1').value}, ${document.getElementById('mop2').value}`
+                }
             })
         });
 
         const result = await response.json();
-        if (response.ok && result.success) {
-            alert(result.message);
-            fetchDashboardData(); // 데이터 새로고침
-        } else {
-            alert(result.message);
-        }
+        alert(result.message);
+        if (result.success) fetchDashboardData();
 
     } catch (error) {
         alert("오류 발생: " + error.message);
