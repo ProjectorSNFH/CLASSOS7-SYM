@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = document.getElementById('loading-text');
         if (overlay && overlay.style.display !== 'none') {
             overlay.classList.add('loading-failed');
-            if (text) text.innerText = "LOADING FAILED: SERVER TIMEOUT (1m)";
+            if (text) text.innerText = "데이터 로딩 실패 : 서버 대기 시간 1분을 초과하였습니다. 인터넷 연결을 확인하세요.";
             setTimeout(() => {
                 overlay.style.opacity = '0';
                 setTimeout(() => overlay.style.display = 'none', 500);
@@ -58,7 +58,7 @@ async function fetchBoardData(loadTimeout) {
         const text = document.getElementById('loading-text');
         if (overlay) {
             overlay.classList.add('loading-failed');
-            if (text) text.innerText = "LOADING FAILED: DATA SERVER ERROR";
+            if (text) text.innerText = "서버 연결 실패 : 오류이거나 서버가 점검 중일 수도 있습니다.";
         }
     } finally {
         sortData(currentSort.column, true);
