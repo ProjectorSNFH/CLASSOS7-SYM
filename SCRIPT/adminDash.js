@@ -114,57 +114,48 @@ async function fetchDashboardData() {
 async function saveDashboard() {
     const saveBtn = document.querySelector('.save-btn');
     const lateInput = document.getElementById('lateInput');
-    
-
-    // 현재 입력값 및 선택값 수집
-    const lateRaw = lateInput ? lateInput.value : "";
-    const s1 = document.getElementById('sweep1').value;
-    const s2 = document.getElementById('sweep2').value;
-    const m1 = document.getElementById('mop1').value;
-    const m2 = document.getElementById('mop2').value;
-
-    // 서버 저장 형식에 맞게 문자열 조립
-    const cleaningStr = `${s1}, ${s2} / ${m1}, ${m2}`;
+    const userRole = getCookie('userRole');
 
     if (!confirm("변경사항을 저장하시겠습니까?")) return;
 
-    // 저장 버튼 비활성화
-    if (saveBtn) {
-        saveBtn.disabled = true;
-        saveBtn.innerText = "저장 중...";
-    }
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "검증 중..."; }
 
     try {
+        // [1단계] middleware에 키값 요청
+        const tokenRes = await fetch(`${DATA_SERVER_URL}/api/auth/verify`, {
+            headers: { 'x-user-role': userRole }
+        });
+        const { token } = await tokenRes.json();
+
+        if (token === "none") {
+            alert("액세스 권한이 부족하여 처리 실패함");
+            return;
+        }
+
+        // [2단계] 받은 키값과 함께 write 요청
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-role': userRole // 서버로 내 권한 정보를 보냄
-            },
+            headers: { 'Content-Type': 'application/json', 'x-user-role': userRole },
             body: JSON.stringify({
                 target: 'dashboard',
-                latecomers: lateRaw,
-                cleaning: cleaningStr
+                latecomers: lateInput.value,
+                cleaning: `${document.getElementById('sweep1').value}, ${document.getElementById('sweep2').value} / ${document.getElementById('mop1').value}, ${document.getElementById('mop2').value}`,
+                token: token // 토큰 동봉
             })
         });
 
         const result = await response.json();
-
         if (response.ok && result.success) {
-            alert("서버에 성공적으로 저장되었습니다!");
+            alert(result.message);
+            fetchDashboardData(); // 데이터 새로고침
         } else {
-            throw new Error(result.message || "저장 실패");
+            alert(result.message);
         }
 
     } catch (error) {
-        console.error("저장 중 에러 발생:", error);
-        alert("저장 오류: " + error.message);
+        alert("오류 발생: " + error.message);
     } finally {
-        // 버튼 상태 복구
-        if (saveBtn) {
-            saveBtn.disabled = false;
-            saveBtn.innerText = "설정 저장하기";
-        }
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "설정 저장하기"; }
     }
 }
 
