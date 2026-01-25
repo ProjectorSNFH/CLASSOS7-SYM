@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const text = document.getElementById('loading-text');
         if (overlay && overlay.style.display !== 'none') {
             overlay.classList.add('loading-failed');
-            text.innerText = "LOADING FAILED: SERVER TIMEOUT (1m)";
+            text.innerText = "데이터 로딩 실패 : 서버 대기 시간 1분을 초과하였습니다. 인터넷 연결을 확인하세요.";
             
             // 실패 메시지 표시 후 3초 뒤 강제 해제
             setTimeout(() => {
@@ -94,7 +94,7 @@ async function fetchDashboardData(userData, loadTimeout) {
         
         if (overlay) {
             overlay.classList.add('loading-failed');
-            if (text) text.innerText = "LOADING FAILED: DATA SERVER ERROR";
+            if (text) text.innerText = "서버 연결 실패 : 오류이거나 데이터 서버가 점검 중일 수도 있습니다.";
             
             setTimeout(() => {
                 overlay.style.opacity = '0';
@@ -104,7 +104,7 @@ async function fetchDashboardData(userData, loadTimeout) {
 
         renderDashboard({
             user: userData,
-            lateStudents: ["오류:데이터 로드 실패"],
+            lateStudents: ["로드 실패"],
             cleaningDuty: { sweeping: ["??"], mopping: ["??"] },
             allNotices: []
         });
