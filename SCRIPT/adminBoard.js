@@ -20,11 +20,11 @@ async function fetchBoardData() {
         const res = await fetch(`${DATA_SERVER_URL}/api/auth/import?target=board`);
         const data = await res.json();
         // 서버 데이터에 UI용 속성 추가
-        boardData = data.map((item, idx) => ({ 
-            id: item.id || idx + Date.now(), 
-            title: item.title, 
-            date: item.date, 
-            isEditing: false 
+        boardData = data.map((item, idx) => ({
+            id: item.id || idx + Date.now(),
+            title: item.title,
+            date: item.date,
+            isEditing: false
         }));
         renderAdminBoard();
     } catch (e) { alert("데이터 로딩 실패"); }
@@ -63,14 +63,25 @@ async function saveToServer() {
     } catch (e) { alert("저장 오류: " + e.message); }
 }
 
+// ... (상단 생략)
+
 function renderAdminBoard() {
     const tbody = document.getElementById('admin-board-body');
-    if(!tbody) return;
+    if (!tbody) return;
     tbody.innerHTML = boardData.map(item => `
         <tr data-id="${item.id}">
             <td class="col-select"><input type="checkbox" class="row-checkbox" value="${item.id}"></td>
             <td class="col-content">
-                ${item.isEditing ? `<input type="text" class="edit-input" value="${item.title}" id="input-t-${item.id}">` : `<span>${item.title}</span>`}
+                ${item.isEditing ? `
+                    <select class="edit-input" id="input-c-${item.id}" style="width: 80px; margin-bottom: 5px;">
+                        <option value="수행" ${item.category === '수행' ? 'selected' : ''}>수행</option>
+                        <option value="안내" ${item.category === '안내' ? 'selected' : ''}>안내</option>
+                    </select>
+                    <input type="text" class="edit-input" value="${item.title}" id="input-t-${item.id}">
+                ` : `
+                    <span class="badge" style="font-size: 0.7rem; color: var(--accent-red); font-weight: bold;">[${item.category || '공지'}]</span>
+                    <span>${item.title}</span>
+                `}
             </td>
             <td class="col-date">
                 ${item.isEditing ? `<input type="date" class="edit-input" value="${item.date}" id="input-d-${item.id}">` : `<span>${item.date}</span>`}
@@ -87,14 +98,18 @@ function renderAdminBoard() {
 function toggleEdit(id) {
     const item = boardData.find(d => d.id === id);
     if (item.isEditing) {
+        const newCategory = document.getElementById(`input-c-${id}`).value; // 카테고리 값 가져오기
         const newTitle = document.getElementById(`input-t-${id}`).value;
         const newDate = document.getElementById(`input-d-${id}`).value;
+
         if (!newTitle.trim()) return alert("내용을 입력하세요.");
+
+        item.category = newCategory; // 객체에 저장
         item.title = newTitle;
         item.date = newDate;
         item.isEditing = false;
         editingId = null;
-        saveToServer(); // 수정 완료 시 즉시 서버 저장
+        saveToServer();
     } else {
         if (editingId !== null) cancelEditing();
         item.isEditing = true;
@@ -103,9 +118,10 @@ function toggleEdit(id) {
     }
 }
 
+// addNewRow 함수도 초기 카테고리 값을 설정하도록 수정
 function addNewRow() {
     const newId = Date.now();
-    boardData.unshift({ id: newId, title: "", date: "", isEditing: true, isNew: true });
+    boardData.unshift({ id: newId, category: "수행", title: "", date: "", isEditing: true, isNew: true });
     editingId = newId;
     renderAdminBoard();
 }
