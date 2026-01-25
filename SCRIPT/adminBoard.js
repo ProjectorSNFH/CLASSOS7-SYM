@@ -95,27 +95,67 @@ function renderAdminBoard() {
     `).join('');
 }
 
+// ... (이전 코드 생략)
+
 function toggleEdit(id) {
     const item = boardData.find(d => d.id === id);
     if (item.isEditing) {
-        const newCategory = document.getElementById(`input-c-${id}`).value; // 카테고리 값 가져오기
+        // [수정] select 엘리먼트에서 카테고리 값을 확실히 가져옵니다.
+        const catEl = document.getElementById(`input-c-${id}`);
+        const newCategory = catEl ? catEl.value : "수행"; 
+        
         const newTitle = document.getElementById(`input-t-${id}`).value;
         const newDate = document.getElementById(`input-d-${id}`).value;
 
         if (!newTitle.trim()) return alert("내용을 입력하세요.");
-
-        item.category = newCategory; // 객체에 저장
+        
+        // 데이터 객체 업데이트 (이제 서버로 날아갈 준비 완료!)
+        item.category = newCategory; 
         item.title = newTitle;
         item.date = newDate;
         item.isEditing = false;
         editingId = null;
-        saveToServer();
+
+        // 서버 전송 실행
+        saveToServer(); 
     } else {
         if (editingId !== null) cancelEditing();
         item.isEditing = true;
         editingId = id;
         renderAdminBoard();
     }
+}
+
+// [핵심] 서버 전송 함수: 현재 boardData의 category를 포함한 모든 정보를 전송
+async function saveToServer() {
+    const userRole = getCookie('userRole');
+    try {
+        const tokenRes = await fetch(`${DATA_SERVER_URL}/api/auth/verify`, {
+            headers: { 'x-user-role': userRole }
+        });
+        const { token } = await tokenRes.json();
+
+        if (token === "none") return alert("액세스 권한 부족");
+
+        const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-user-role': userRole },
+            body: JSON.stringify({
+                target: 'board',
+                token: token,
+                // [확인] boardData 배열 안의 category, title, date가 모두 포함되어 날아갑니다.
+                data: { boardList: boardData } 
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert("게시판 데이터가 성공적으로 저장되었습니다!");
+            fetchBoardData(); 
+        } else {
+            alert("실패: " + result.message);
+        }
+    } catch (e) { alert("저장 오류: " + e.message); }
 }
 
 // addNewRow 함수도 초기 카테고리 값을 설정하도록 수정
