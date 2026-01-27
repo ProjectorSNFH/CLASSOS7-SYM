@@ -1,69 +1,56 @@
 const DATA_SERVER_URL = "https://classos7-dx.vercel.app";
-let boardData = []; // 서버에서 받아올 데이터
+let boardData = []; 
 let isSelectionMode = false;
 let editingId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 권한 체크
     const role = getCookie('userRole');
     if (role !== 'A' && role !== 'B') {
         alert("게시판 관리 권한이 없습니다.");
         window.location.href = "admin.html";
         return;
     }
-    fetchBoardData(); // 초기 데이터 로드
+    fetchBoardData();
 });
 
-// 데이터 불러오기
+// 데이터 불러오기 (UI 상태 초기화 포함)
 async function fetchBoardData() {
     try {
         const res = await fetch(`${DATA_SERVER_URL}/api/auth/import?target=board`);
         const data = await res.json();
-        // 서버 데이터에 UI용 속성 추가
         boardData = data.map((item, idx) => ({
             id: item.id || idx + Date.now(),
+            category: item.category || "수행",
             title: item.title,
             date: item.date,
             isEditing: false
         }));
+        // 데이터 로드 시 모든 모드 리셋
+        editingId = null;
+        if(isSelectionMode) toggleSelectionMode(); 
         renderAdminBoard();
     } catch (e) { alert("데이터 로딩 실패"); }
 }
 
-// [핵심] 서버 저장 로직 (토큰 방식)
-async function saveToServer() {
-    const userRole = getCookie('userRole');
-    try {
-        // 1. 토큰 요청
-        const tokenRes = await fetch(`${DATA_SERVER_URL}/api/auth/verify`, {
-            headers: { 'x-user-role': userRole }
-        });
-        const { token } = await tokenRes.json();
-
-        if (token === "none") return alert("액세스 권한이 부족합니다.");
-
-        // 2. 데이터 전송
-        const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-user-role': userRole },
-            body: JSON.stringify({
-                target: 'board',
-                token: token,
-                data: { boardList: boardData } // 현재 boardData 배열 전송
-            })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-            alert(result.message);
-            fetchBoardData(); // 최신화
-        } else {
-            alert(result.message);
-        }
-    } catch (e) { alert("저장 오류: " + e.message); }
+// [공통] 수정 취소 함수
+function cancelEditing() {
+    // 새로 만들던 항목이면 배열에서 제거, 기존 항목이면 상태만 복구
+    boardData = boardData.filter(item => !item.isNew);
+    boardData.forEach(item => item.isEditing = false);
+    editingId = null;
 }
 
-// ... (상단 생략)
+// [공통] 선택 모드 강제 종료
+function forceExitSelectionMode() {
+    if (isSelectionMode) {
+        isSelectionMode = false;
+        const btn = document.getElementById('toggleSelectMode');
+        const delBtn = document.getElementById('deleteBtn');
+        document.body.classList.remove('selection-mode');
+        if(btn) btn.innerText = "선택 모드";
+        if(delBtn) delBtn.style.display = "none";
+    }
+}
 
 function renderAdminBoard() {
     const tbody = document.getElementById('admin-board-body');
@@ -77,7 +64,7 @@ function renderAdminBoard() {
                         <option value="수행" ${item.category === '수행' ? 'selected' : ''}>수행</option>
                         <option value="안내" ${item.category === '안내' ? 'selected' : ''}>안내</option>
                     </select>
-                    <input type="text" class="edit-input" value="${item.title}" id="input-t-${item.id}">
+                    <input type="text" class="edit-input" value="${item.title}" id="input-t-${item.id}" placeholder="내용 입력">
                 ` : `
                     <span class="badge" style="font-size: 0.7rem; color: var(--accent-red); font-weight: bold;">[${item.category || '공지'}]</span>
                     <span>${item.title}</span>
@@ -95,38 +82,76 @@ function renderAdminBoard() {
     `).join('');
 }
 
-// ... (이전 코드 생략)
-
 function toggleEdit(id) {
     const item = boardData.find(d => d.id === id);
+    
     if (item.isEditing) {
-        // [수정] select 엘리먼트에서 카테고리 값을 확실히 가져옵니다.
-        const catEl = document.getElementById(`input-c-${id}`);
-        const newCategory = catEl ? catEl.value : "수행"; 
-        
+        // 저장 로직
+        const newCategory = document.getElementById(`input-c-${id}`).value;
         const newTitle = document.getElementById(`input-t-${id}`).value;
         const newDate = document.getElementById(`input-d-${id}`).value;
 
         if (!newTitle.trim()) return alert("내용을 입력하세요.");
         
-        // 데이터 객체 업데이트 (이제 서버로 날아갈 준비 완료!)
         item.category = newCategory; 
         item.title = newTitle;
         item.date = newDate;
         item.isEditing = false;
+        item.isNew = false; // 새 항목 딱지 떼기
         editingId = null;
-
-        // 서버 전송 실행
         saveToServer(); 
     } else {
+        // 수정 모드 진입 시: 선택 모드 해제 및 기존 수정 취소
+        forceExitSelectionMode();
         if (editingId !== null) cancelEditing();
+        
         item.isEditing = true;
         editingId = id;
         renderAdminBoard();
     }
 }
 
-// [핵심] 서버 전송 함수: 현재 boardData의 category를 포함한 모든 정보를 전송
+function addNewRow() {
+    // 1. 이미 새 항목이 수정 중이라면 중복 생성 방지
+    if (boardData.some(item => item.isNew)) {
+        alert("이미 작성 중인 새 항목이 있습니다.");
+        return;
+    }
+
+    // 2. 다른 모드들 정리
+    forceExitSelectionMode();
+    if (editingId !== null) cancelEditing();
+
+    // 3. 새 항목 추가
+    const newId = Date.now();
+    boardData.unshift({ 
+        id: newId, 
+        category: "수행", 
+        title: "", 
+        date: new Date().toISOString().split('T')[0], 
+        isEditing: true, 
+        isNew: true 
+    });
+    editingId = newId;
+    renderAdminBoard();
+}
+
+function toggleSelectionMode() {
+    // 선택 모드 켤 때 수정 중이던 게 있다면 취소
+    if (!isSelectionMode) {
+        if (editingId !== null) cancelEditing();
+    }
+    
+    isSelectionMode = !isSelectionMode;
+    const btn = document.getElementById('toggleSelectMode');
+    const delBtn = document.getElementById('deleteBtn');
+    document.body.classList.toggle('selection-mode');
+    
+    if(btn) btn.innerText = isSelectionMode ? "선택 모드 취소" : "선택 모드";
+    if(delBtn) delBtn.style.display = isSelectionMode ? "inline-block" : "none";
+    renderAdminBoard();
+}
+
 async function saveToServer() {
     const userRole = getCookie('userRole');
     try {
@@ -134,7 +159,6 @@ async function saveToServer() {
             headers: { 'x-user-role': userRole }
         });
         const { token } = await tokenRes.json();
-
         if (token === "none") return alert("액세스 권한 부족");
 
         const response = await fetch(`${DATA_SERVER_URL}/api/auth/write`, {
@@ -143,27 +167,16 @@ async function saveToServer() {
             body: JSON.stringify({
                 target: 'board',
                 token: token,
-                // [확인] boardData 배열 안의 category, title, date가 모두 포함되어 날아갑니다.
-                data: { boardList: boardData } 
+                data: { boardList: boardData.filter(item => !item.isNew || !item.isEditing) } 
             })
         });
 
         const result = await response.json();
         if (result.success) {
-            alert("게시판 데이터가 성공적으로 저장되었습니다!");
+            alert("저장되었습니다!");
             fetchBoardData(); 
-        } else {
-            alert("실패: " + result.message);
         }
     } catch (e) { alert("저장 오류: " + e.message); }
-}
-
-// addNewRow 함수도 초기 카테고리 값을 설정하도록 수정
-function addNewRow() {
-    const newId = Date.now();
-    boardData.unshift({ id: newId, category: "수행", title: "", date: "", isEditing: true, isNew: true });
-    editingId = newId;
-    renderAdminBoard();
 }
 
 function deleteSelected() {
@@ -172,17 +185,8 @@ function deleteSelected() {
     if (confirm("삭제하시겠습니까?")) {
         const idsToDelete = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
         boardData = boardData.filter(item => !idsToDelete.includes(item.id));
-        saveToServer(); // 삭제 후 서버 동기화
+        saveToServer();
     }
-}
-
-function toggleSelectionMode() {
-    isSelectionMode = !isSelectionMode;
-    const btn = document.getElementById('toggleSelectMode');
-    const delBtn = document.getElementById('deleteBtn');
-    document.body.classList.toggle('selection-mode');
-    btn.innerText = isSelectionMode ? "선택 모드 취소" : "선택 모드";
-    delBtn.style.display = isSelectionMode ? "inline-block" : "none";
 }
 
 function getCookie(name) {
