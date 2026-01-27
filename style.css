@@ -104,6 +104,16 @@ nav {
     color: var(--text-color);
 }
 
+.nav-left .logo-text .p {
+    
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-weight: 400;
+    word-break: keep-all;
+}
+
 .nav-center {
     display: flex;
     gap: 30px;
