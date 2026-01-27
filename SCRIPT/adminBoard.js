@@ -195,3 +195,15 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
     return null;
 }
+
+// 페이지 이탈 시 경고 (수정 중인 내용이 있을 때만)
+window.addEventListener('beforeunload', (e) => {
+    // 1. 현재 수정 중인 항목이 있거나 새 항목을 만드는 중인지 체크
+    const isWorking = editingId !== null || boardData.some(item => item.isNew);
+
+    if (isWorking) {
+        // 표준 방식: 브라우저가 기본 경고창을 띄우게 함
+        e.preventDefault();
+        e.returnValue = ''; // 크롬 등 최신 브라우저에서 경고창을 띄우기 위해 필수
+    }
+});
