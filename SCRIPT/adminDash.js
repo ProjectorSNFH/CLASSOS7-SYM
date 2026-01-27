@@ -38,8 +38,8 @@ function initSelectBoxes() {
         loadingOpt.value = "";
         el.appendChild(loadingOpt);
 
-        // 1번부터 30번까지 옵션 생성
-        for (let i = 1; i <= 30; i++) {
+        // 1번부터 23번까지 옵션 생성
+        for (let i = 1; i <= 23; i++) {
             const num = i < 10 ? `0${i}` : `${i}`;
             const option = document.createElement('option');
             option.value = num;
