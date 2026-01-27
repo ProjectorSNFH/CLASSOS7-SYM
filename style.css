@@ -90,6 +90,12 @@ nav {
     box-shadow: var(--nav-shadow);
 }
 
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .nav-left .logo-text {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 800;
