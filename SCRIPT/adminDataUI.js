@@ -2,15 +2,15 @@ let centerData = [];
 let isSelectionMode = false;
 let editingId = null;
 
-// [1] 초기화: 데이터 로드
+// [1] 데이터 초기 로드
 async function initAdminData() {
     try {
         centerData = await DataService.fetchData();
         renderAdminData();
-    } catch (e) { console.error("Load Error:", e); }
+    } catch (e) { console.error("데이터 로드 실패:", e); }
 }
 
-// [2] 테이블 렌더링 (체크박스 및 상태 완벽 복구)
+// [2] 테이블 렌더링 (체크박스/수정모드 완벽 반영)
 function renderAdminData() {
     const tbody = document.getElementById('admin-data-body');
     if (!tbody) return;
@@ -46,7 +46,7 @@ function renderAdminData() {
     tbody.innerHTML = html;
 }
 
-// [3] UI 조작 핸들러
+// [3] UI 조작 헬퍼
 const UIHelper = {
     handleEditEvent(btn) {
         const id = btn.getAttribute('data-id');
@@ -78,19 +78,14 @@ const UIHelper = {
     triggerFile() { document.getElementById('hiddenFileInput').click(); }
 };
 
-// [4] 선택 모드 및 추가/삭제 기능
+// [4] 부가 기능 (선택, 추가, 삭제)
 function toggleSelectionMode() {
     if (DataService.isUploading) return;
     if (editingId) UIHelper.cancelEditing();
     isSelectionMode = !isSelectionMode;
-    
     document.body.classList.toggle('selection-mode', isSelectionMode);
-    const delBtn = document.getElementById('deleteBtn');
-    if (delBtn) delBtn.style.display = isSelectionMode ? 'inline-block' : 'none';
-    
-    const toggleBtn = document.getElementById('toggleSelectMode');
-    if (toggleBtn) toggleBtn.innerText = isSelectionMode ? "취소" : "선택 모드";
-    
+    document.getElementById('deleteBtn').style.display = isSelectionMode ? 'inline-block' : 'none';
+    document.getElementById('toggleSelectMode').innerText = isSelectionMode ? "취소" : "선택 모드";
     renderAdminData();
 }
 
@@ -103,18 +98,17 @@ function addNewData() {
     renderAdminData();
 }
 
-// 삭제 기능 복구
 async function deleteSelected() {
     const checked = document.querySelectorAll('.row-checkbox:checked');
     if (checked.length === 0) return alert("삭제할 대상을 선택하세요.");
-    if (!confirm(`${checked.length}개의 항목을 삭제하시겠습니까?`)) return;
+    if (!confirm("정말 삭제하시겠습니까?")) return;
 
     const ids = Array.from(checked).map(cb => cb.value);
     try {
         await DataService.deleteItems(ids);
         alert("삭제 완료");
         location.reload();
-    } catch (e) { alert("삭제 실패"); }
+    } catch (e) { alert("삭제 오류 발생"); }
 }
 
 function handleFileSelect(e) {
