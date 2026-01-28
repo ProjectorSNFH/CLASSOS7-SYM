@@ -2,19 +2,21 @@ let centerData = [];
 let isSelectionMode = false;
 let editingId = null;
 
-// [1] 페이지 초기 로드
+// [데이터 로드] - 말씀하신 대로 UI 스크립트에서 직접 관리
 async function initAdminData() {
     console.log("데이터 로딩 시작...");
     try {
+        // DataService에서 데이터를 가져와 전역 변수에 할당
         centerData = await DataService.fetchData();
-        console.log("데이터 로딩 완료:", centerData);
+        console.log("로드된 데이터:", centerData);
         renderAdminData();
     } catch (e) {
-        console.error("데이터 로드 중 오류 발생:", e);
+        console.error("데이터 로딩 실패:", e);
+        alert("데이터를 불러오지 못했습니다.");
     }
 }
 
-// [2] 테이블 렌더링
+// [화면 렌더링]
 function renderAdminData() {
     const tbody = document.getElementById('admin-data-body');
     if (!tbody) return;
@@ -23,7 +25,6 @@ function renderAdminData() {
     centerData.forEach(item => {
         const isEdit = (String(item.id) === String(editingId));
         const isNew = item.isNew || false;
-        const isDisabled = (DataService.isUploading || (isSelectionMode && !isEdit));
 
         html += `
         <tr data-id="${item.id}">
@@ -40,8 +41,7 @@ function renderAdminData() {
             <td style="text-align:center">
                 <button class="edit-icon-btn ${isEdit ? 'save-icon-btn' : ''}" 
                         data-id="${item.id}"
-                        onclick="UIHelper.handleEditEvent(this)"
-                        ${isDisabled ? 'disabled style="opacity:0.3"' : ''}>
+                        onclick="UIHelper.handleEditEvent(this)">
                     ${isEdit ? '✔' : '✎'}
                 </button>
             </td>
@@ -50,7 +50,7 @@ function renderAdminData() {
     tbody.innerHTML = html;
 }
 
-// [3] UI 이벤트 조작 (UIHelper)
+// [UI 헬퍼]
 const UIHelper = {
     handleEditEvent(btn) {
         const id = btn.getAttribute('data-id');
@@ -79,38 +79,15 @@ const UIHelper = {
         editingId = null;
         DataService.selectedFile = null;
     },
-    triggerFile() {
-        document.getElementById('hiddenFileInput').click();
-    }
+    triggerFile() { document.getElementById('hiddenFileInput').click(); }
 };
 
-// [4] 상단 공통 버튼 함수
-function toggleSelectionMode() {
-    if (DataService.isUploading) return;
-    if (editingId) UIHelper.cancelEditing();
-    isSelectionMode = !isSelectionMode;
-    document.body.classList.toggle('selection-mode', isSelectionMode);
-    document.getElementById('deleteBtn').style.display = isSelectionMode ? 'inline-block' : 'none';
-    document.getElementById('toggleSelectMode').innerText = isSelectionMode ? "취소" : "선택 모드";
-    renderAdminData();
-}
-
 function addNewData() {
-    if (DataService.isUploading || editingId) return alert("작업 중인 항목을 완료해 주세요.");
-    if (isSelectionMode) toggleSelectionMode();
+    if (DataService.isUploading || editingId) return;
     const newId = Date.now();
     centerData.unshift({ id: newId, title: "", fileName: "", isNew: true });
     editingId = newId;
     renderAdminData();
-}
-
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) {
-        DataService.selectedFile = file;
-        const display = document.getElementById('file-name-display');
-        if (display) display.innerText = file.name;
-    }
 }
 
 window.addEventListener('load', initAdminData);
