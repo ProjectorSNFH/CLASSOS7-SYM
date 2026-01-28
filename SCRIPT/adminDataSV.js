@@ -1,96 +1,61 @@
-// adminDataSV.js
+// @vercel/blob 패키지 필요 없이 브라우저 기본 fetch로 구현 가능
 const DataService = {
     isUploading: false,
     selectedFile: null,
     SERVER_URL: "https://classos7-dx.vercel.app",
 
-    // 데이터 가져오기
-    async fetchData() {
-        const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`);
-        return await res.json();
-    },
-
-    // 업로드 프로세스 (45% -> 5% -> 50%)
     async executeUpload(id, title, isNew) {
         this.isUploading = true;
         const bar = document.getElementById('progressBar');
-        const panel = document.getElementById('uploadStatusPanel');
-        if (panel) panel.style.display = 'block';
+        document.getElementById('uploadStatusPanel').style.display = 'block';
 
-        const fd = new FormData();
-        if (isNew && this.selectedFile) fd.append('file', this.selectedFile);
-        fd.append('title', title);
-        fd.append('id', id);
+        try {
+            let fileUrl = "";
+            let fileName = "";
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${this.SERVER_URL}/api/auth/upload`);
-
-        // Phase 1: Vercel 전송 (0% ~ 45%)
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable && bar) {
-                const p = (e.loaded / e.total) * 45;
-                bar.style.width = p + '%';
-                this.updateUIInfo("서버로 파일 전송 중...", e.loaded, e.total);
+            if (isNew && this.selectedFile) {
+                // [Phase 1] Vercel Blob으로 직접 업로드 (4.5MB 제한 우회)
+                document.getElementById('uploadFileName').innerText = "Vercel Blob 저장소 전송 중...";
+                const response = await fetch(`${this.SERVER_URL}/api/upload/blob?filename=${this.selectedFile.name}`, {
+                    method: 'POST',
+                    body: this.selectedFile,
+                });
+                const blobData = await response.json();
+                fileUrl = blobData.url; // 저장된 파일 경로
+                fileName = this.selectedFile.name;
+                bar.style.width = '45%';
             }
-        };
 
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                // Phase 2: 정보 수정 완료 (50%)
-                if (bar) bar.style.width = '50%';
-                this.updateUIInfo("구글 드라이브 동기화 중...");
-                // Phase 3: 구글 드라이브 전송 감시 (50% ~ 100%)
+            // [Phase 2] 서버에 메타데이터(URL, 제목 등) 전송
+            document.getElementById('uploadFileName').innerText = "구글 드라이브 동기화 요청 중...";
+            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, title, fileUrl, fileName, isNew })
+            });
+
+            if (res.ok) {
                 this.startPolling(bar);
             } else {
-                alert("전송 중 오류가 발생했습니다.");
-                this.reset();
+                throw new Error("서버 동기화 실패");
             }
-        };
-        xhr.send(fd);
+
+        } catch (e) {
+            alert("업로드 에러: " + e.message);
+            this.isUploading = false;
+        }
     },
 
     startPolling(bar) {
         const timer = setInterval(async () => {
-            try {
-                const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
-                const status = await res.json();
-                if (bar) bar.style.width = status.progress + '%';
-                this.updateUIInfo(status.stage || "진행 중...");
-
-                if (status.progress >= 100) {
-                    clearInterval(timer);
-                    setTimeout(() => location.reload(), 500);
-                }
-            } catch (e) {
+            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
+            const s = await res.json();
+            bar.style.width = s.progress + '%';
+            document.getElementById('uploadFileName').innerText = s.stage;
+            if (s.progress >= 100) {
                 clearInterval(timer);
+                setTimeout(() => location.reload(), 800);
             }
         }, 1000);
-    },
-
-    async deleteItems(ids) {
-        if (!confirm("구글 드라이브 파일도 함께 삭제됩니다. 계속하시겠습니까?")) return;
-        for (const id of ids) {
-            await fetch(`${this.SERVER_URL}/api/auth/upload`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id })
-            });
-        }
-        location.reload();
-    },
-
-    updateUIInfo(stage, loaded = 0, total = 0) {
-        const nameText = document.getElementById('uploadFileName');
-        const sizeText = document.getElementById('uploadSize');
-        if (nameText) nameText.innerText = stage;
-        if (sizeText && total > 0) {
-            sizeText.innerText = `${(loaded/1048576).toFixed(1)}MB / ${(total/1048576).toFixed(1)}MB`;
-        }
-    },
-
-    reset() {
-        this.isUploading = false;
-        const panel = document.getElementById('uploadStatusPanel');
-        if (panel) panel.style.display = 'none';
     }
 };
