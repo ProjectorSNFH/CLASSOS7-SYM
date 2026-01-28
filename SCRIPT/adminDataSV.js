@@ -1,116 +1,117 @@
-let centerData = [];
-let isSelectionMode = false;
-let editingId = null;
+const DataService = {
+    isUploading: false,
+    selectedFile: null,
+    SERVER_URL: "https://classos7-dx.vercel.app",
 
-// [1] 페이지 초기 로드
-async function initAdminData() {
-    console.log("데이터 로딩 시작...");
-    try {
-        centerData = await DataService.fetchData();
-        console.log("데이터 로딩 완료:", centerData);
-        renderAdminData();
-    } catch (e) {
-        console.error("데이터 로드 중 오류 발생:", e);
-    }
-}
-
-// [2] 테이블 렌더링
-function renderAdminData() {
-    const tbody = document.getElementById('admin-data-body');
-    if (!tbody) return;
-
-    let html = '';
-    centerData.forEach(item => {
-        const isEdit = (String(item.id) === String(editingId));
-        const isNew = item.isNew || false;
-        const isDisabled = (DataService.isUploading || (isSelectionMode && !isEdit));
-
-        html += `
-        <tr data-id="${item.id}">
-            <td class="col-select"><input type="checkbox" class="row-checkbox" value="${item.id}"></td>
-            <td>
-                ${isEdit ? `<input type="text" id="input-${item.id}" class="edit-input" value="${item.title}">` : `<span>${item.title}</span>`}
-            </td>
-            <td>
-                ${isEdit && isNew 
-                    ? `<button class="control-btn" style="padding:2px 8px" onclick="UIHelper.triggerFile()">파일 선택</button>
-                       <span id="file-name-display" style="font-size:12px">${DataService.selectedFile ? DataService.selectedFile.name : '선택 전'}</span>` 
-                    : `<span>${item.fileName || '-'}</span>`}
-            </td>
-            <td style="text-align:center">
-                <button class="edit-icon-btn ${isEdit ? 'save-icon-btn' : ''}" 
-                        data-id="${item.id}"
-                        onclick="UIHelper.handleEditEvent(this)"
-                        ${isDisabled ? 'disabled style="opacity:0.3"' : ''}>
-                    ${isEdit ? '✔' : '✎'}
-                </button>
-            </td>
-        </tr>`;
-    });
-    tbody.innerHTML = html;
-}
-
-// [3] UI 이벤트 조작 (UIHelper)
-const UIHelper = {
-    handleEditEvent(btn) {
-        const id = btn.getAttribute('data-id');
-        this.handleEdit(id);
-    },
-    handleEdit(id) {
-        if (DataService.isUploading) return;
-        const item = centerData.find(d => String(d.id) === String(id));
-
-        if (String(id) === String(editingId)) {
-            const titleInput = document.getElementById(`input-${id}`);
-            const titleValue = titleInput ? titleInput.value.trim() : "";
-            if (!titleValue) return alert("제목을 입력하세요.");
-            if (item.isNew && !DataService.selectedFile) return alert("파일을 선택하세요.");
-            
-            DataService.executeUpload(id, titleValue, item.isNew);
-        } else {
-            if (isSelectionMode) toggleSelectionMode();
-            this.cancelEditing();
-            editingId = id;
-            renderAdminData();
+    // [1] 데이터 불러오기 (CORS 이슈 대응을 위해 명시적 호출)
+    async fetchData() {
+        try {
+            const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!res.ok) throw new Error("서버 응답 오류");
+            return await res.json();
+        } catch (e) {
+            console.error("Fetch fetchData Failed:", e);
+            return [];
         }
     },
-    cancelEditing() {
-        centerData = centerData.filter(i => !i.isNew);
-        editingId = null;
-        DataService.selectedFile = null;
+
+    // [2] 업로드 로직 (Vercel Blob 사용)
+    async executeUpload(id, title, isNew) {
+        this.isUploading = true;
+        const bar = document.getElementById('progressBar');
+        const panel = document.getElementById('uploadStatusPanel');
+        if (panel) panel.style.display = 'block';
+
+        try {
+            let fileUrl = "";
+            let fileName = "";
+
+            // 신규 파일이 있는 경우 Vercel Blob으로 직접 전송 (4.5MB 우회)
+            if (isNew && this.selectedFile) {
+                this.updateStatus("저장소로 파일 전송 중...", 20);
+                
+                // Vercel Blob용 헬퍼 API 호출 (가정)
+                const blobRes = await fetch(`${this.SERVER_URL}/api/upload/blob?filename=${encodeURIComponent(this.selectedFile.name)}`, {
+                    method: 'POST',
+                    body: this.selectedFile,
+                });
+                
+                if (!blobRes.ok) throw new Error("Blob Storage Upload Failed");
+                const blobData = await blobRes.json();
+                fileUrl = blobData.url;
+                fileName = this.selectedFile.name;
+                this.updateStatus("저장소 전송 완료", 45);
+            }
+
+            // 구글 드라이브 동기화 요청 (서버에 URL만 전달)
+            this.updateStatus("구글 드라이브 동기화 요청...", 50);
+            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, title, fileUrl, fileName, isNew })
+            });
+
+            if (res.ok) {
+                this.startPolling(bar);
+            } else {
+                throw new Error("서버 동기화 요청 실패");
+            }
+
+        } catch (e) {
+            alert("에러: " + e.message);
+            this.resetUI();
+        }
     },
-    triggerFile() {
-        document.getElementById('hiddenFileInput').click();
+
+    // [3] 진행 상태 폴링
+    startPolling(bar) {
+        const timer = setInterval(async () => {
+            try {
+                const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
+                const status = await res.json();
+                
+                if (bar) bar.style.width = status.progress + '%';
+                this.updateStatus(status.stage || "진행 중...");
+
+                if (status.progress >= 100) {
+                    clearInterval(timer);
+                    setTimeout(() => location.reload(), 800);
+                }
+            } catch (e) {
+                clearInterval(timer);
+            }
+        }, 1000);
+    },
+
+    updateStatus(msg, prog = null) {
+        const txt = document.getElementById('uploadFileName');
+        const bar = document.getElementById('progressBar');
+        if (txt) txt.innerText = msg;
+        if (prog !== null && bar) bar.style.width = prog + '%';
+    },
+
+    resetUI() {
+        this.isUploading = false;
+        const panel = document.getElementById('uploadStatusPanel');
+        if (panel) panel.style.display = 'none';
     }
 };
 
-// [4] 상단 공통 버튼 함수
-function toggleSelectionMode() {
-    if (DataService.isUploading) return;
-    if (editingId) UIHelper.cancelEditing();
-    isSelectionMode = !isSelectionMode;
-    document.body.classList.toggle('selection-mode', isSelectionMode);
-    document.getElementById('deleteBtn').style.display = isSelectionMode ? 'inline-block' : 'none';
-    document.getElementById('toggleSelectMode').innerText = isSelectionMode ? "취소" : "선택 모드";
-    renderAdminData();
-}
+// 선택 삭제 함수
+async function deleteSelected() {
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    if (checked.length === 0) return alert("삭제할 대상을 선택하세요.");
+    if (!confirm("정말 삭제하시겠습니까?")) return;
 
-function addNewData() {
-    if (DataService.isUploading || editingId) return alert("작업 중인 항목을 완료해 주세요.");
-    if (isSelectionMode) toggleSelectionMode();
-    const newId = Date.now();
-    centerData.unshift({ id: newId, title: "", fileName: "", isNew: true });
-    editingId = newId;
-    renderAdminData();
-}
-
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) {
-        DataService.selectedFile = file;
-        const display = document.getElementById('file-name-display');
-        if (display) display.innerText = file.name;
+    for (let cb of checked) {
+        await fetch(`${DataService.SERVER_URL}/api/auth/upload`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: cb.value })
+        });
     }
+    location.reload();
 }
-
-window.addEventListener('load', initAdminData);
