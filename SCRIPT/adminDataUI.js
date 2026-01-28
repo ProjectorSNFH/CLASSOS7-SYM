@@ -2,21 +2,20 @@ let centerData = [];
 let isSelectionMode = false;
 let editingId = null;
 
-// [데이터 로드] - 말씀하신 대로 UI 스크립트에서 직접 관리
+// [1] 데이터 로드 로직
 async function initAdminData() {
     console.log("데이터 로딩 시작...");
     try {
-        // DataService에서 데이터를 가져와 전역 변수에 할당
+        // DataService 객체의 fetchData 함수 호출
         centerData = await DataService.fetchData();
-        console.log("로드된 데이터:", centerData);
+        console.log("로드 성공:", centerData);
         renderAdminData();
     } catch (e) {
-        console.error("데이터 로딩 실패:", e);
-        alert("데이터를 불러오지 못했습니다.");
+        console.error("데이터 로딩 중 치명적 오류:", e);
     }
 }
 
-// [화면 렌더링]
+// [2] 테이블 렌더링
 function renderAdminData() {
     const tbody = document.getElementById('admin-data-body');
     if (!tbody) return;
@@ -50,7 +49,7 @@ function renderAdminData() {
     tbody.innerHTML = html;
 }
 
-// [UI 헬퍼]
+// [3] UI 조작 핸들러
 const UIHelper = {
     handleEditEvent(btn) {
         const id = btn.getAttribute('data-id');
