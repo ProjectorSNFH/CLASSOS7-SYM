@@ -1,65 +1,65 @@
+// adminDataSV.js
 const DataService = {
     isUploading: false,
     selectedFile: null,
-    SERVER: "https://classos7-dx.vercel.app",
+    SERVER_URL: "https://classos7-dx.vercel.app",
 
+    // 데이터 가져오기
     async fetchData() {
-        const r = await fetch(`${this.SERVER}/api/auth/import?target=datacenter`);
-        return await r.json();
+        const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`);
+        return await res.json();
     },
 
+    // 업로드 프로세스 (45% -> 5% -> 50%)
     async executeUpload(id, title, isNew) {
         this.isUploading = true;
-        const panel = document.getElementById('uploadStatusPanel');
         const bar = document.getElementById('progressBar');
+        const panel = document.getElementById('uploadStatusPanel');
         if (panel) panel.style.display = 'block';
 
         const fd = new FormData();
-        if (isNew) fd.append('file', this.selectedFile);
+        if (isNew && this.selectedFile) fd.append('file', this.selectedFile);
         fd.append('title', title);
         fd.append('id', id);
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${this.SERVER}/api/auth/upload`);
+        xhr.open('POST', `${this.SERVER_URL}/api/auth/upload`);
 
-        // [Phase 1] Vercel 업로드 (0% ~ 45%)
+        // Phase 1: Vercel 전송 (0% ~ 45%)
         xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
+            if (e.lengthComputable && bar) {
                 const p = (e.loaded / e.total) * 45;
-                if (bar) bar.style.width = p + '%';
-                this.updateText("Vercel로 파일 전송 중...");
+                bar.style.width = p + '%';
+                this.updateUIInfo("서버로 파일 전송 중...", e.loaded, e.total);
             }
         };
 
         xhr.onload = () => {
             if (xhr.status === 200) {
-                // [Phase 2] 파일 수정 및 정보 처리 (응답 시점 50%로 점프)
+                // Phase 2: 정보 수정 완료 (50%)
                 if (bar) bar.style.width = '50%';
-                this.updateText("데이터 정보 수정 중...");
-                
-                // [Phase 3] 구글 드라이브 전송 확인 (50% ~ 100% 폴링)
-                this.pollStatus(bar);
+                this.updateUIInfo("구글 드라이브 동기화 중...");
+                // Phase 3: 구글 드라이브 전송 감시 (50% ~ 100%)
+                this.startPolling(bar);
             } else {
-                alert("업로드 실패");
+                alert("전송 중 오류가 발생했습니다.");
                 this.reset();
             }
         };
         xhr.send(fd);
     },
 
-    pollStatus(bar) {
+    startPolling(bar) {
         const timer = setInterval(async () => {
             try {
-                const r = await fetch(`${this.SERVER}/api/auth/upload`);
-                const s = await r.json();
-                
-                // 서버에서 주는 progress는 50~100 사이여야 함
-                if (bar) bar.style.width = s.progress + '%';
-                this.updateText(s.stage || "구글 드라이브 업로드 중...");
+                const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
+                const status = await res.json();
+                if (bar) bar.style.width = status.progress + '%';
+                this.updateUIInfo(status.stage || "진행 중...");
 
-                if (s.progress >= 100) {
+                if (status.progress >= 100) {
                     clearInterval(timer);
-                    setTimeout(() => { location.reload(); }, 500);
+                    setTimeout(() => location.reload(), 500);
                 }
             } catch (e) {
                 clearInterval(timer);
@@ -67,32 +67,30 @@ const DataService = {
         }, 1000);
     },
 
-    async deleteItems() {
-        const checked = document.querySelectorAll('.row-checkbox:checked');
-        if (checked.length === 0) return;
-        if (!confirm("구글 드라이브 파일까지 삭제됩니다. 계속하시겠습니까?")) return;
-
-        for (let cb of checked) {
-            await fetch(`${this.SERVER}/api/auth/upload`, {
+    async deleteItems(ids) {
+        if (!confirm("구글 드라이브 파일도 함께 삭제됩니다. 계속하시겠습니까?")) return;
+        for (const id of ids) {
+            await fetch(`${this.SERVER_URL}/api/auth/upload`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: cb.value })
+                body: JSON.stringify({ id })
             });
         }
         location.reload();
     },
 
-    updateText(msg) {
-        const t = document.getElementById('uploadFileName');
-        if (t) t.innerText = msg;
+    updateUIInfo(stage, loaded = 0, total = 0) {
+        const nameText = document.getElementById('uploadFileName');
+        const sizeText = document.getElementById('uploadSize');
+        if (nameText) nameText.innerText = stage;
+        if (sizeText && total > 0) {
+            sizeText.innerText = `${(loaded/1048576).toFixed(1)}MB / ${(total/1048576).toFixed(1)}MB`;
+        }
     },
 
     reset() {
         this.isUploading = false;
-        const p = document.getElementById('uploadStatusPanel');
-        if (p) p.style.display = 'none';
+        const panel = document.getElementById('uploadStatusPanel');
+        if (panel) panel.style.display = 'none';
     }
 };
-
-// 전역 삭제 버튼 연결용
-function deleteSelected() { DataService.deleteItems(); }
