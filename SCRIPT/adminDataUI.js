@@ -1,75 +1,84 @@
 /**
  * adminDataUI.js
- * 기능: UI 렌더링, 모드 제어(수정/추가/선택), 중복 작업 차단
+ * 기능: UI 렌더링 및 모드 제어 (중복 간섭 차단)
  */
 
-// [1] 전역 UI 상태 관리
 let centerData = [];
 let isSelectionMode = false;
 let editingId = null;
 
-// [2] 페이지 초기화
+// [1] 초기 데이터 로드
 async function initAdminData() {
-    // DataService는 adminDataSV.js에 정의되어 있어야 함
-    centerData = await DataService.fetchData(); 
-    renderAdminData();
+    try {
+        // DataService는 adminDataSV.js에 정의됨
+        centerData = await DataService.fetchData(); 
+        renderAdminData();
+    } catch (e) {
+        console.error("데이터 로드 중 오류:", e);
+    }
 }
 
-// [3] 테이블 렌더링 (핵심 함수)
+// [2] 테이블 렌더링 (SyntaxError 방지를 위해 문자열 조립 최적화)
 function renderAdminData() {
     const tbody = document.getElementById('admin-data-body');
     if (!tbody) return;
 
-    tbody.innerHTML = centerData.map(item => `
-        <tr data-id="${item.id}" class="${item.isEditing ? 'editing-row' : ''}">
+    let html = "";
+    centerData.forEach(item => {
+        const isEdit = item.isEditing;
+        const isNew = item.isNew;
+        
+        // 버튼 활성화 상태 계산
+        const isBtnDisabled = (isSelectionMode || DataService.isUploading) && !isEdit;
+        const disabledAttr = isBtnDisabled ? 'disabled style="opacity:0.3"' : '';
+        const btnClass = isEdit ? 'edit-icon-btn save-icon-btn' : 'edit-icon-btn';
+        const btnIcon = isEdit ? '✔' : '✎';
+
+        html += `
+        <tr data-id="${item.id}">
             <td class="col-select">
-                <input type="checkbox" class="row-checkbox" value="${item.id}" data-fileid="${item.fileId}">
+                <input type="checkbox" class="row-checkbox" value="${item.id}">
             </td>
             <td class="col-title">
-                ${item.isEditing 
-                    ? `<input type="text" class="edit-input" id="input-${item.id}" value="${item.title}" placeholder="제목을 입력하세요">` 
+                ${isEdit 
+                    ? `<input type="text" class="edit-input" id="input-${item.id}" value="${item.title}">` 
                     : `<span>${item.title}</span>`}
             </td>
             <td class="col-file">
-                ${item.isEditing && item.isNew 
-                    ? `<div class="file-upload-zone">
-                         <button class="control-btn" onclick="UIHelper.triggerFile()">📁 파일 선택</button>
-                         <span id="fileNameDisplay">${DataService.selectedFile ? DataService.selectedFile.name : '선택된 파일 없음'}</span>
-                       </div>`
-                    : `<span>${item.fileName || '파일 없음'}</span>`}
+                ${isEdit && isNew 
+                    ? `<button class="control-btn" onclick="UIHelper.triggerFile()">📁 선택</button>
+                       <span id="fileNameDisplay" style="font-size:0.8rem;">${DataService.selectedFile ? DataService.selectedFile.name : '파일 없음'}</span>`
+                    : `<span>${item.fileName || ''}</span>`}
             </td>
             <td class="col-manage">
-                <button class="edit-icon-btn ${item.isEditing ? 'save-icon-btn' : ''}" 
-                        onclick="UIHelper.handleEditClick(${item.id})"
-                        ${(isSelectionMode || DataService.isUploading) && !item.isEditing ? 'disabled' : ''}>
-                    ${item.isEditing ? '✔' : '✎'}
+                <button class="${btnClass}" onclick="UIHelper.handleEditClick(${item.id})" ${disabledAttr}>
+                    ${btnIcon}
                 </button>
             </td>
-        </tr>
-    `).join('');
+        </tr>`;
+    });
+
+    tbody.innerHTML = html;
 }
 
-// [4] UI 보조 로직 (UIHelper)
+// [3] UI 보조 로직
 const UIHelper = {
-    // 수정/완료 버튼 클릭 핸들러
     handleEditClick(id) {
-        if (DataService.isUploading) return; 
+        if (DataService.isUploading) return;
         const item = centerData.find(d => d.id === id);
 
         if (item.isEditing) {
-            // 완료(저장) 모드
-            const titleInput = document.getElementById(`input-${id}`);
-            const titleValue = titleInput.value.trim();
+            // 저장(완료) 시점
+            const titleVal = document.getElementById(`input-${id}`).value.trim();
+            if (!titleVal) return alert("제목을 입력하세요.");
+            if (item.isNew && !DataService.selectedFile) return alert("파일을 선택하세요.");
 
-            if (!titleValue) return alert("제목을 입력해주세요.");
-            if (item.isNew && !DataService.selectedFile) return alert("업로드할 파일을 선택해주세요.");
-
-            // 서버 전송 요청 (SV 시스템 호출)
-            DataService.executeUpload(id, titleValue, item.isNew);
+            // 서버 통신 요청 (adminDataSV.js 호출)
+            DataService.executeUpload(id, titleVal, item.isNew);
         } else {
-            // 수정 모드 진입
-            if (isSelectionMode) toggleSelectionMode(); // 선택 모드 해제
-            this.cancelAllEditing(); // 다른 수정 중인 항목 초기화
+            // 수정 모드 진입 (간섭 차단)
+            if (isSelectionMode) toggleSelectionMode();
+            this.cancelAllEditing();
             
             item.isEditing = true;
             editingId = id;
@@ -77,78 +86,58 @@ const UIHelper = {
         }
     },
 
-    // 모든 수정 상태 초기화
     cancelAllEditing() {
-        centerData = centerData.filter(item => !item.isNew); // 저장 안 된 새 항목 삭제
-        centerData.forEach(item => item.isEditing = false);
+        centerData = centerData.filter(i => !i.isNew);
+        centerData.forEach(i => i.isEditing = false);
         editingId = null;
         DataService.selectedFile = null;
         renderAdminData();
     },
 
-    // 파일 선택창 열기
     triggerFile() {
-        const fileInput = document.getElementById('hiddenFileInput');
-        if (fileInput) fileInput.click();
+        document.getElementById('hiddenFileInput').click();
     }
 };
 
-// [5] 상단 컨트롤 버튼 함수들
+// [4] 공통 버튼 제어
 function toggleSelectionMode() {
     if (DataService.isUploading) return;
     if (editingId) UIHelper.cancelAllEditing();
-    
+
     isSelectionMode = !isSelectionMode;
     document.body.classList.toggle('selection-mode', isSelectionMode);
     
-    // 버튼 UI 업데이트
-    document.getElementById('deleteBtn').style.display = isSelectionMode ? 'inline-block' : 'none';
-    document.getElementById('toggleSelectMode').innerText = isSelectionMode ? "선택 모드 취소" : "선택 모드";
+    const delBtn = document.getElementById('deleteBtn');
+    const toggleBtn = document.getElementById('toggleSelectMode');
+    
+    if (delBtn) delBtn.style.display = isSelectionMode ? 'inline-block' : 'none';
+    if (toggleBtn) toggleBtn.innerText = isSelectionMode ? "취소" : "선택 모드";
     
     renderAdminData();
 }
 
 function addNewData() {
-    if (DataService.isUploading || editingId) return alert("이미 수정 또는 업로드 중인 항목이 있습니다.");
+    if (DataService.isUploading || editingId) return alert("이미 작업 중입니다.");
     if (isSelectionMode) toggleSelectionMode();
 
     const newId = Date.now();
     centerData.unshift({ 
-        id: newId, 
-        title: "", 
-        fileName: "", 
-        isEditing: true, 
-        isNew: true,
-        fileId: null 
+        id: newId, title: "", fileName: "", 
+        isEditing: true, isNew: true 
     });
     editingId = newId;
     renderAdminData();
 }
 
-// [6] 파일 선택 이벤트 핸들러 (Input 태그 연결용)
-function handleFileSelect(event) {
-    const file = event.target.files[0];
+// 파일 선택 시 처리
+function handleFileSelect(e) {
+    const file = e.target.files[0];
     if (file) {
-        if (file.size > 50 * 1024 * 1024) {
-            alert("파일 크기는 50MB를 초과할 수 없습니다.");
-            event.target.value = "";
-            return;
-        }
         DataService.selectedFile = file;
-        
-        // UI에 파일명 즉시 반영
         const display = document.getElementById('fileNameDisplay');
         if (display) display.innerText = file.name;
     }
 }
-
-// [7] 이탈 방지 경고
-window.addEventListener('beforeunload', (e) => {
-    if (editingId || DataService.isUploading) {
-        e.preventDefault();
-        e.returnValue = '';
-    }
-});
 
 // 시작
 window.onload = initAdminData;
