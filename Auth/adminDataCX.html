@@ -191,16 +191,48 @@
     <main class="main-container">
         <header class="admin-header">
             <h1>데이터 센터 관리</h1>
-            <p>미완성 시스템입니다. 업로드 및 수정은 관리자에게 문의하십시오.</p>
+            <p>구글 드라이브와 연동되어 자료를 안전하게 업로드하고 관리합니다.</p>
         </header>
 
+        <div id="uploadStatusPanel" class="upload-panel" style="display: none;">
+            <div class="upload-info">
+                <span id="uploadFileName" class="file-name-text">준비 중...</span>
+                <span id="uploadSpeed" class="speed-text">0 KB/s</span>
+            </div>
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar-mac"></div>
+            </div>
+            <div class="upload-detail">
+                <span id="uploadSize">0.0MB / 0.0MB</span>
+            </div>
+        </div>
+
         <section class="section-card">
-            <p>개발 중...</p>
-            <a href="">업로드는 Google Form에 입력하세요.</a>
+            <div class="board-controls">
+                <button class="control-btn" id="toggleSelectMode" onclick="toggleSelectionMode()">선택 모드</button>
+                <button class="control-btn" id="addBtn" onclick="addNewData()">+ 자료 추가</button>
+                <button class="control-btn btn-red" id="deleteBtn" style="display: none;" onclick="deleteSelected()">선택 삭제</button>
+            </div>
+
+            <input type="file" id="hiddenFileInput" style="display: none;" onchange="handleFileSelect(event)">
+
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th class="col-select">선택</th>
+                        <th class="col-title">자료 명칭</th>
+                        <th class="col-file">파일명</th>
+                        <th class="col-manage">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-data-body">
+                    </tbody>
+            </table>
         </section>
     </main>
 
     <script src="../script.js"></script>
+    <script src="../SCRIPT/adminData.js"></script>
 </body>
 
 </html>
