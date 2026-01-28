@@ -3,25 +3,8 @@ const DataService = {
     selectedFile: null,
     SERVER_URL: "https://classos7-dx.vercel.app",
 
-    // [1] 데이터 불러오기 (CORS 이슈 대응을 위해 명시적 호출)
-    async fetchData() {
-        try {
-            const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (!res.ok) throw new Error("서버 응답 오류");
-            return await res.json();
-        } catch (e) {
-            console.error("Fetch fetchData Failed:", e);
-            return [];
-        }
-    },
-
-    // [2] 업로드 로직 (Vercel Blob 사용)
     async executeUpload(id, title, isNew) {
         this.isUploading = true;
-        const bar = document.getElementById('progressBar');
         const panel = document.getElementById('uploadStatusPanel');
         if (panel) panel.style.display = 'block';
 
@@ -29,89 +12,47 @@ const DataService = {
             let fileUrl = "";
             let fileName = "";
 
-            // 신규 파일이 있는 경우 Vercel Blob으로 직접 전송 (4.5MB 우회)
             if (isNew && this.selectedFile) {
-                this.updateStatus("저장소로 파일 전송 중...", 20);
+                document.getElementById('uploadFileName').innerText = "파일 저장소 전송 중...";
                 
-                // Vercel Blob용 헬퍼 API 호출 (가정)
-                const blobRes = await fetch(`${this.SERVER_URL}/api/upload/blob?filename=${encodeURIComponent(this.selectedFile.name)}`, {
+                // [수정] 경로를 /api/auth/upload로 통일하고 mode=blob 추가
+                const blobRes = await fetch(`${this.SERVER_URL}/api/auth/upload?mode=blob&filename=${encodeURIComponent(this.selectedFile.name)}`, {
                     method: 'POST',
-                    body: this.selectedFile,
+                    body: this.selectedFile // 파일을 바이너리로 직접 전송
                 });
                 
-                if (!blobRes.ok) throw new Error("Blob Storage Upload Failed");
+                if (!blobRes.ok) throw new Error("저장소 전송 실패 (CORS 또는 토큰 확인)");
                 const blobData = await blobRes.json();
                 fileUrl = blobData.url;
                 fileName = this.selectedFile.name;
-                this.updateStatus("저장소 전송 완료", 45);
             }
 
-            // 구글 드라이브 동기화 요청 (서버에 URL만 전달)
-            this.updateStatus("구글 드라이브 동기화 요청...", 50);
-            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
+            // 구글 드라이브 동기화 요청
+            document.getElementById('uploadFileName').innerText = "구글 드라이브 동기화 중...";
+            await fetch(`${this.SERVER_URL}/api/auth/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, title, fileUrl, fileName, isNew })
             });
 
-            if (res.ok) {
-                this.startPolling(bar);
-            } else {
-                throw new Error("서버 동기화 요청 실패");
-            }
-
+            this.startPolling();
         } catch (e) {
-            alert("에러: " + e.message);
-            this.resetUI();
+            alert("업로드 실패: " + e.message);
+            this.isUploading = false;
         }
     },
 
-    // [3] 진행 상태 폴링
-    startPolling(bar) {
+    startPolling() {
+        const bar = document.getElementById('progressBar');
         const timer = setInterval(async () => {
-            try {
-                const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
-                const status = await res.json();
-                
-                if (bar) bar.style.width = status.progress + '%';
-                this.updateStatus(status.stage || "진행 중...");
-
-                if (status.progress >= 100) {
-                    clearInterval(timer);
-                    setTimeout(() => location.reload(), 800);
-                }
-            } catch (e) {
+            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
+            const s = await res.json();
+            if (bar) bar.style.width = s.progress + '%';
+            document.getElementById('uploadFileName').innerText = s.stage;
+            if (s.progress >= 100) {
                 clearInterval(timer);
+                setTimeout(() => location.reload(), 1000);
             }
         }, 1000);
-    },
-
-    updateStatus(msg, prog = null) {
-        const txt = document.getElementById('uploadFileName');
-        const bar = document.getElementById('progressBar');
-        if (txt) txt.innerText = msg;
-        if (prog !== null && bar) bar.style.width = prog + '%';
-    },
-
-    resetUI() {
-        this.isUploading = false;
-        const panel = document.getElementById('uploadStatusPanel');
-        if (panel) panel.style.display = 'none';
     }
 };
-
-// 선택 삭제 함수
-async function deleteSelected() {
-    const checked = document.querySelectorAll('.row-checkbox:checked');
-    if (checked.length === 0) return alert("삭제할 대상을 선택하세요.");
-    if (!confirm("정말 삭제하시겠습니까?")) return;
-
-    for (let cb of checked) {
-        await fetch(`${DataService.SERVER_URL}/api/auth/upload`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: cb.value })
-        });
-    }
-    location.reload();
-}
