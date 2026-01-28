@@ -6,9 +6,7 @@ async function initAdminData() {
     try {
         centerData = await DataService.fetchData();
         renderAdminData();
-    } catch (e) {
-        console.error("Data Load Error");
-    }
+    } catch (e) { console.error("Load Error"); }
 }
 
 function renderAdminData() {
@@ -17,38 +15,45 @@ function renderAdminData() {
 
     let html = '';
     centerData.forEach(item => {
-        const isEdit = (item.id === editingId);
+        const isEdit = (String(item.id) === String(editingId));
         const isNew = item.isNew || false;
-        const isDisabled = (DataService.isUploading || (isSelectionMode && !isEdit));
-
-        html += `<tr data-id="${item.id}">`;
-        html += `<td class="col-select"><input type="checkbox" class="row-checkbox" value="${item.id}" data-fileid="${item.fileId}"></td>`;
-        html += `<td>${isEdit ? `<input type="text" id="input-${item.id}" class="edit-input" value="${item.title}">` : `<span>${item.title}</span>`}</td>`;
         
-        // 수정 모드이면서 '새로 만들기'일 때만 파일 선택 가능
-        html += `<td>`;
-        if (isEdit && isNew) {
-            html += `<button class="control-btn" onclick="UIHelper.openFile()">📁 선택</button> `;
-            html += `<span id="file-name-text" style="font-size:12px;">${DataService.selectedFile ? DataService.selectedFile.name : '파일 없음'}</span>`;
-        } else {
-            html += `<span>${item.fileName || '-'}</span>`;
-        }
-        html += `</td>`;
-
-        html += `<td style="text-align:center;">`;
-        html += `<button class="edit-icon-btn ${isEdit ? 'save-icon-btn' : ''}" onclick="UIHelper.handleEdit(${item.id})" ${isDisabled ? 'disabled style="opacity:0.3"' : ''}>`;
-        html += isEdit ? '✔' : '✎';
-        html += `</button></td></tr>`;
+        html += `
+        <tr data-id="${item.id}">
+            <td class="col-select"><input type="checkbox" class="row-checkbox" value="${item.id}"></td>
+            <td>
+                ${isEdit ? `<input type="text" id="input-${item.id}" class="edit-input" value="${item.title}">` : `<span>${item.title}</span>`}
+            </td>
+            <td>
+                ${isEdit && isNew 
+                    ? `<button class="control-btn" style="padding:2px 8px" onclick="UIHelper.triggerFile()">파일 선택</button>
+                       <span id="file-name-display" style="font-size:12px">${DataService.selectedFile ? DataService.selectedFile.name : '선택 전'}</span>` 
+                    : `<span>${item.fileName || '-'}</span>`}
+            </td>
+            <td style="text-align:center">
+                <button class="edit-icon-btn ${isEdit ? 'save-icon-btn' : ''}" 
+                        data-id="${item.id}"
+                        onclick="UIHelper.handleEditEvent(this)">
+                    ${isEdit ? '✔' : '✎'}
+                </button>
+            </td>
+        </tr>`;
     });
     tbody.innerHTML = html;
 }
 
 const UIHelper = {
+    // 버튼 자체를 인자로 받아 data-id를 읽음 (SyntaxError 방지)
+    handleEditEvent(btn) {
+        const id = btn.getAttribute('data-id');
+        this.handleEdit(id);
+    },
+
     handleEdit(id) {
         if (DataService.isUploading) return;
-        const item = centerData.find(d => d.id === id);
+        const item = centerData.find(d => String(d.id) === String(id));
 
-        if (item.id === editingId) {
+        if (String(id) === String(editingId)) {
             const titleInput = document.getElementById(`input-${id}`);
             const titleValue = titleInput ? titleInput.value.trim() : "";
             if (!titleValue) return alert("제목을 입력하세요.");
@@ -57,26 +62,22 @@ const UIHelper = {
             DataService.executeUpload(id, titleValue, item.isNew);
         } else {
             if (isSelectionMode) toggleSelectionMode();
-            this.clearEditing();
+            this.cancelEditing();
             editingId = id;
-            item.isEditing = true;
             renderAdminData();
         }
     },
-    clearEditing() {
+    cancelEditing() {
         centerData = centerData.filter(i => !i.isNew);
-        centerData.forEach(i => i.isEditing = false);
         editingId = null;
         DataService.selectedFile = null;
     },
-    openFile() {
-        document.getElementById('hiddenFileInput').click();
-    }
+    triggerFile() { document.getElementById('hiddenFileInput').click(); }
 };
 
 function toggleSelectionMode() {
     if (DataService.isUploading) return;
-    if (editingId) UIHelper.clearEditing();
+    if (editingId) UIHelper.cancelEditing();
     isSelectionMode = !isSelectionMode;
     document.body.classList.toggle('selection-mode', isSelectionMode);
     document.getElementById('deleteBtn').style.display = isSelectionMode ? 'inline-block' : 'none';
@@ -87,9 +88,9 @@ function toggleSelectionMode() {
 function addNewData() {
     if (DataService.isUploading || editingId) return;
     if (isSelectionMode) toggleSelectionMode();
-    const nId = Date.now();
-    centerData.unshift({ id: nId, title: "", fileName: "", isEditing: true, isNew: true });
-    editingId = nId;
+    const newId = Date.now();
+    centerData.unshift({ id: newId, title: "", fileName: "", isNew: true });
+    editingId = newId;
     renderAdminData();
 }
 
@@ -97,9 +98,9 @@ function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) {
         DataService.selectedFile = file;
-        const text = document.getElementById('file-name-text');
-        if (text) text.innerText = file.name;
+        const display = document.getElementById('file-name-display');
+        if (display) display.innerText = file.name;
     }
 }
 
-window.onload = initAdminData;
+window.addEventListener('load', initAdminData);
