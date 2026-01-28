@@ -3,75 +3,70 @@ const DataService = {
     selectedFile: null,
     SERVER_URL: "https://classos7-dx.vercel.app",
 
-    // [중요] fetchData 함수 정의 (TypeError 방지)
+    // 데이터 로드
     async fetchData() {
-        try {
-            const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`);
-            if (!res.ok) throw new Error("서버 응답 없음");
-            return await res.json();
-        } catch (e) {
-            console.error("fetchData 실패:", e);
-            return [];
-        }
+        const res = await fetch(`${this.SERVER_URL}/api/auth/import?target=datacenter`);
+        if (!res.ok) throw new Error("Load Fail");
+        return await res.json();
     },
 
-    // 업로드 통합 실행
+    // 업로드 (Blob + JSON 통합)
     async executeUpload(id, title, isNew) {
         this.isUploading = true;
-        const panel = document.getElementById('uploadStatusPanel');
         const bar = document.getElementById('progressBar');
+        const panel = document.getElementById('uploadStatusPanel');
         if (panel) panel.style.display = 'block';
 
         try {
             let fileUrl = "";
             let fileName = "";
 
-            // 신규 파일이 있는 경우 Blob으로 먼저 업로드
             if (isNew && this.selectedFile) {
-                document.getElementById('uploadFileName').innerText = "파일 저장소로 전송 중...";
+                // 1단계: Blob 직송 (CORS OK)
                 const blobRes = await fetch(`${this.SERVER_URL}/api/auth/upload?mode=blob&filename=${encodeURIComponent(this.selectedFile.name)}`, {
                     method: 'POST',
                     body: this.selectedFile
                 });
-                
-                if (!blobRes.ok) throw new Error("Blob 전송 실패 (CORS 또는 토큰 확인 필요)");
                 const blobData = await blobRes.json();
                 fileUrl = blobData.url;
                 fileName = this.selectedFile.name;
             }
 
-            // 구글 드라이브 동기화 요청 (JSON 전송)
-            document.getElementById('uploadFileName').innerText = "구글 드라이브 동기화 중...";
-            const syncRes = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
+            // 2단계: 구글 동기화
+            await fetch(`${this.SERVER_URL}/api/auth/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, title, fileUrl, fileName, isNew })
             });
 
-            if (syncRes.ok) {
-                this.startPolling(bar);
-            } else {
-                throw new Error("동기화 요청 실패");
-            }
+            this.startPolling(bar);
         } catch (e) {
-            alert("작업 실패: " + e.message);
+            alert("오류: " + e.message);
             this.isUploading = false;
+        }
+    },
+
+    // 삭제 기능
+    async deleteItems(ids) {
+        for (const id of ids) {
+            await fetch(`${this.SERVER_URL}/api/auth/upload`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
         }
     },
 
     startPolling(bar) {
         const timer = setInterval(async () => {
-            try {
-                const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
-                const status = await res.json();
-                if (bar) bar.style.width = status.progress + '%';
-                document.getElementById('uploadFileName').innerText = status.stage;
-
-                if (status.progress >= 100) {
-                    clearInterval(timer);
-                    setTimeout(() => location.reload(), 1000);
-                }
-            } catch (e) { clearInterval(timer); }
+            const res = await fetch(`${this.SERVER_URL}/api/auth/upload`);
+            const s = await res.json();
+            if (bar) bar.style.width = s.progress + '%';
+            document.getElementById('uploadFileName').innerText = s.stage;
+            if (s.progress >= 100) {
+                clearInterval(timer);
+                setTimeout(() => location.reload(), 800);
+            }
         }, 1000);
     }
 };
