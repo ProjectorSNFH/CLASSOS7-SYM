@@ -24,19 +24,20 @@ const DataService = {
 
             if (isNew && this.selectedFile) {
                 statusText.innerText = "저장소 업로드 중...";
+                // 8.8MB 파일을 Blob으로 바로 쏨
                 const bRes = await fetch(`${this.SERVER_URL}/api/auth/upload?mode=blob&filename=${encodeURIComponent(this.selectedFile.name)}`, {
                     method: 'POST', body: this.selectedFile
                 });
                 if (!bRes.ok) {
-                    const err = await bRes.json();
-                    throw new Error(err.error || "Blob Error");
+                    const errData = await bRes.json();
+                    throw new Error(errData.error || "Blob Upload Failed");
                 }
                 const bData = await bRes.json();
                 fileUrl = bData.url;
                 fileName = this.selectedFile.name;
             }
 
-            statusText.innerText = "동기화 요청 중...";
+            statusText.innerText = "서버 동기화 중...";
             const syncRes = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -46,12 +47,11 @@ const DataService = {
             if (syncRes.status === 202 || syncRes.ok) {
                 this.startPolling(bar, statusText);
             } else {
-                throw new Error("서버 접수 실패");
+                throw new Error("서버 동기화 실패");
             }
         } catch (e) {
             alert("실패: " + e.message);
             this.isUploading = false;
-            document.getElementById('uploadStatusPanel').style.display = 'none';
         }
     },
 
@@ -75,7 +75,7 @@ const DataService = {
                 if (s.progress >= 100) {
                     clearInterval(timer);
                     setTimeout(() => location.reload(), 1000);
-                } else if (s.stage.includes("에러")) {
+                } else if (s.stage.includes("에러") || s.stage.includes("실패")) {
                     clearInterval(timer);
                     alert(s.stage);
                     this.isUploading = false;
