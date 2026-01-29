@@ -23,33 +23,35 @@ const DataService = {
             let fileName = "";
 
             if (isNew && this.selectedFile) {
-                statusText.innerText = "1단계: 대용량 파일 저장소 업로드 중...";
+                statusText.innerText = "저장소 업로드 중...";
                 const bRes = await fetch(`${this.SERVER_URL}/api/auth/upload?mode=blob&filename=${encodeURIComponent(this.selectedFile.name)}`, {
                     method: 'POST', body: this.selectedFile
                 });
+                if (!bRes.ok) {
+                    const err = await bRes.json();
+                    throw new Error(err.error || "Blob Error");
+                }
                 const bData = await bRes.json();
-                if (!bRes.ok) throw new Error(bData.error || "저장소 업로드 실패");
                 fileUrl = bData.url;
                 fileName = this.selectedFile.name;
             }
 
-            statusText.innerText = "2단계: 서버 작업 접수 중...";
+            statusText.innerText = "동기화 요청 중...";
             const syncRes = await fetch(`${this.SERVER_URL}/api/auth/upload`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, title, fileUrl, fileName, isNew })
             });
 
-            // 200(성공) 또는 202(접수됨)일 경우 폴링 시작
-            if (syncRes.ok || syncRes.status === 202) {
+            if (syncRes.status === 202 || syncRes.ok) {
                 this.startPolling(bar, statusText);
             } else {
-                const errData = await syncRes.json();
-                throw new Error(errData.error || "서버 응답 오류");
+                throw new Error("서버 접수 실패");
             }
         } catch (e) {
-            alert("오류 발생: " + e.message);
+            alert("실패: " + e.message);
             this.isUploading = false;
+            document.getElementById('uploadStatusPanel').style.display = 'none';
         }
     },
 
@@ -70,7 +72,6 @@ const DataService = {
                 const s = await res.json();
                 if (bar) bar.style.width = s.progress + '%';
                 if (statusText) statusText.innerText = s.stage;
-                
                 if (s.progress >= 100) {
                     clearInterval(timer);
                     setTimeout(() => location.reload(), 1000);
