@@ -245,7 +245,7 @@ async function checkSession() {
             // [수정] 내 이름이 명단에 진짜로 없는지 대조
             if (data.activeSessions && !data.activeSessions.includes(userName)) {
                 console.log("세션 불일치 - 내 이름:", userName, "서버 명단:", data.activeSessions);
-                forceLogout("다른 기기에서 로그인했거나 관리자가 로그아웃시켰습니다.");
+                forceLogout("세션이 만료되거나 관리자에 의해 강제 로그아웃 되었습니다. (시스템 점검 사유가 해당될 수도 있습니다.");
             }
 
         } catch (error) {
